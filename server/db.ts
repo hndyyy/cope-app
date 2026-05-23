@@ -11,9 +11,9 @@ export function getPool(): mysql.Pool {
     _pool = mysql.createPool({
       host:     process.env.DB_HOST     || 'localhost',
       port:     Number(process.env.DB_PORT) || 3306,
-      user:     process.env.DB_USER     || 'mindbridge',
-      password: process.env.DB_PASSWORD || 'mindbridge123',
-      database: process.env.DB_NAME     || 'mindbridge',
+      user:     process.env.DB_USER     || 'cope_user',
+      password: process.env.DB_PASSWORD || 'cope_password',
+      database: process.env.DB_NAME     || 'cope',
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,
@@ -137,9 +137,22 @@ async function seedUsers(pool: mysql.Pool): Promise<void> {
 
   await pool.query(ins, ['user-student-1',   'rizky',         hash('student123'),  'Rizky Aditya Pratama',    'student',   'NIM: 215150400111 | Smt 5', 'Teknik Informatika', '215150400111']);
   await pool.query(ins, ['user-student-2',   'dewi',          hash('student123'),  'Dewi Rahayu Santoso',     'student',   'NIM: 215150400222 | Smt 3', 'FEB',                '215150400222']);
+  await pool.query(ins, ['user-student-3',   'ahmad',         hash('student123'),  'Ahmad Farid Hidayat',     'student',   'NIM: 215150400333 | Smt 7', 'Teknik Informatika', '215150400333']);
+  await pool.query(ins, ['user-student-4',   'budi',          hash('student123'),  'Budi Santoso',            'student',   'NIM: 215150400444 | Smt 1', 'FH',                 '215150400444']);
+  await pool.query(ins, ['user-student-5',   'siti',          hash('student123'),  'Siti Nurhaliza',          'student',   'NIM: 215150400555 | Smt 3', 'FK',                 '215150400555']);
+  await pool.query(ins, ['user-student-6',   'eko',           hash('student123'),  'Eko Prasetyo',            'student',   'NIM: 215150400666 | Smt 5', 'FIA',                '215150400666']);
+  await pool.query(ins, ['user-student-7',   'rina',          hash('student123'),  'Rina Marlina',            'student',   'NIM: 215150400777 | Smt 7', 'Teknik Informatika', '215150400777']);
+  await pool.query(ins, ['user-student-8',   'dimas',         hash('student123'),  'Dimas Arifin',            'student',   'NIM: 215150400888 | Smt 1', 'FEB',                '215150400888']);
+  await pool.query(ins, ['user-student-9',   'laila',         hash('student123'),  'Laila Fitriani',          'student',   'NIM: 215150400999 | Smt 3', 'FH',                 '215150400999']);
+  await pool.query(ins, ['user-student-10',  'joko',          hash('student123'),  'Joko Anwar',              'student',   'NIM: 215150401000 | Smt 5', 'FK',                 '215150401000']);
+  await pool.query(ins, ['user-student-11',  'maya',          hash('student123'),  'Maya Sari',               'student',   'NIM: 215150401111 | Smt 7', 'FIA',                '215150401111']);
+  await pool.query(ins, ['user-student-12',  'agung',         hash('student123'),  'Agung Hapsah',            'student',   'NIM: 215150401222 | Smt 1', 'Teknik Informatika', '215150401222']);
+  
   await pool.query(ins, ['user-counselor-1', 'dr.sari',       hash('konselor123'), 'Dr. Sari Kusumawati',     'counselor', 'Subdirektorat Konseling UB','Konseling UB',       null]);
   await pool.query(ins, ['user-counselor-2', 'ahmad.dahlan',  hash('konselor123'), 'Ahmad Dahlan, M.Psi',     'counselor', 'Konselor Klinis UB',        'Konseling UB',       null]);
+  await pool.query(ins, ['user-counselor-3', 'dina.ramadhani',hash('konselor123'), 'Dina Ramadhani, S.Psi',   'counselor', 'Konselor Sebaya UB',        'Konseling UB',       null]);
   await pool.query(ins, ['user-prof-1',      'prof.hendra',   hash('prof123'),     'Prof. Dr. Hendra Wijaya', 'prof',      'Direktur Kemahasiswaan UB', 'Dashboard Pimpinan', null]);
+  await pool.query(ins, ['user-prof-2',      'prof.bambang',  hash('prof123'),     'Prof. Dr. Bambang S',     'prof',      'Dekan FILKOM',              'Dashboard Pimpinan', null]);
 
   const insPhq = 'INSERT INTO phq9_submissions (id, user_id, answers, score, category, risk_flag, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)';
   await pool.query(insPhq, ['phq-s1-1','user-student-1',JSON.stringify([0,1,1,1,0,1,0,0,0]),  4, 'Normal',          0,'2023-08-11 10:00:00']);
@@ -148,6 +161,16 @@ async function seedUsers(pool: mysql.Pool): Promise<void> {
   await pool.query(insPhq, ['phq-s1-4','user-student-1',JSON.stringify([1,1,2,1,1,1,1,0,0]),  8, 'Depresi Ringan',  0,'2023-09-22 10:00:00']);
   await pool.query(insPhq, ['phq-s1-5','user-student-1',JSON.stringify([2,2,1,2,1,1,1,0,0]), 10, 'Depresi Moderat', 0,'2023-10-06 10:00:00']);
   await pool.query(insPhq, ['phq-s1-6','user-student-1',JSON.stringify([2,2,1,2,1,2,1,0,0]), 11, 'Depresi Moderat', 0,'2023-10-20 10:00:00']);
+  await pool.query(insPhq, ['phq-s2-1','user-student-2',JSON.stringify([3,3,3,2,3,2,2,2,0]), 20, 'Depresi Berat',   1,'2023-10-21 10:00:00']);
+  await pool.query(insPhq, ['phq-s3-1','user-student-3',JSON.stringify([3,3,3,3,3,3,3,3,0]), 24, 'Depresi Berat',   1,'2023-10-22 10:00:00']);
+  await pool.query(insPhq, ['phq-s4-1','user-student-4',JSON.stringify([0,0,1,1,0,0,0,0,0]),  2, 'Normal',          0,'2023-10-23 10:00:00']);
+
+  const insJournal = 'INSERT INTO journals (id, user_id, content, created_at) VALUES (?, ?, ?, ?)';
+  await pool.query(insJournal, ['j-1', 'user-student-1', 'Hari ini merasa cukup tenang walau tugas menumpuk. Sempat jalan-jalan sebentar sore tadi.', '2023-10-23 18:30:00']);
+  await pool.query(insJournal, ['j-2', 'user-student-1', 'Jurnal hari ini: Agak cemas karena besok ada presentasi, tapi sudah kusiapkan sebaik mungkin.', '2023-10-24 20:15:00']);
+  await pool.query(insJournal, ['j-3', 'user-student-2', 'Masih merasa sangat lelah. Semalaman nggak bisa tidur dengan nyenyak. Harus coba kurangi kafein.', '2023-10-22 09:00:00']);
+  await pool.query(insJournal, ['j-4', 'user-student-2', 'Hari ini rasanya kelam sekali, nggak ada semangat untuk ke kampus. Mau nangis rasanya.', '2023-10-23 11:45:00']);
+  await pool.query(insJournal, ['j-5', 'user-student-3', 'Sangat berat. Ingin menyerah tapi teringat keluarga di rumah. Kapan ini berakhir?', '2023-10-22 22:10:00']);
 }
 
 // ===== PUBLIC HELPERS (all async) =====
@@ -221,6 +244,14 @@ export async function saveSoapNote(data: {
   }
 }
 
+export async function getSoapNote(studentId: string, counselorId: string): Promise<string> {
+  const [rows] = await getPool().query<mysql.RowDataPacket[]>(
+    'SELECT content FROM soap_notes WHERE student_id = ? AND counselor_id = ?',
+    [studentId, counselorId]
+  );
+  return (rows as any[])[0]?.content || '';
+}
+
 export async function updateTriageStatus(data: {
   studentId: string; counselorId: string; status: string;
 }): Promise<void> {
@@ -256,4 +287,44 @@ export async function addInput(data: {
     'INSERT INTO inputs (id, user_id, route, payload, response, created_at) VALUES (?, ?, ?, ?, ?, ?)',
     [data.id, data.userId ?? null, data.route, JSON.stringify(data.payload), JSON.stringify(data.response), data.createdAt]
   );
+}
+
+export async function getJournalsByUserId(userId: string): Promise<any[]> {
+  const [rows] = await getPool().query<mysql.RowDataPacket[]>(
+    'SELECT * FROM journals WHERE user_id = ? ORDER BY created_at DESC',
+    [userId]
+  );
+  return rows as any[];
+}
+
+export async function getStudentsForTriage(): Promise<any[]> {
+  const [rows] = await getPool().query<mysql.RowDataPacket[]>(`
+    SELECT 
+      u.id, u.name as nama, u.faculty as fak, 
+      p.score, p.category as rank_text, p.created_at as phq_date,
+      t.status as triage_status,
+      CASE 
+        WHEN p.score >= 15 THEN 'Krisis'
+        WHEN p.score >= 10 THEN 'Tinggi'
+        WHEN p.score >= 5 THEN 'Sedang'
+        ELSE 'Rendah'
+      END as \`rank\`
+    FROM users u
+    LEFT JOIN (
+      SELECT user_id, MAX(created_at) as max_date 
+      FROM phq9_submissions GROUP BY user_id
+    ) latest_phq ON u.id = latest_phq.user_id
+    LEFT JOIN phq9_submissions p ON latest_phq.user_id = p.user_id AND latest_phq.max_date = p.created_at
+    LEFT JOIN triage_status t ON u.id = t.student_id
+    WHERE u.role = 'student'
+    ORDER BY p.score DESC, u.created_at DESC
+  `);
+  return rows as any[];
+}
+
+export async function getCounselors(): Promise<any[]> {
+  const [rows] = await getPool().query<mysql.RowDataPacket[]>(
+    'SELECT id, name, detail, faculty FROM users WHERE role = "counselor" ORDER BY name ASC'
+  );
+  return rows as any[];
 }

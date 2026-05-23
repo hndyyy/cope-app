@@ -8,6 +8,10 @@ import {
   saveSoapNote,
   updateTriageStatus,
   getPhq9History,
+  getJournalsByUserId,
+  getStudentsForTriage,
+  getCounselors,
+  getSoapNote,
 } from '../db.js';
 import { authMiddleware, requireRole, RequestWithUser } from '../middleware/auth.js';
 
@@ -129,6 +133,34 @@ router.get('/history', requireRole('student'), async (req: RequestWithUser, res:
   }
 });
 
+/**
+ * GET /api/data/counselors
+ * Get list of counselors (for students)
+ */
+router.get('/counselors', requireRole('student'), async (req: RequestWithUser, res: Response) => {
+  try {
+    const rows = await getCounselors();
+    return res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('Counselors error:', err);
+    return res.status(500).json({ success: false, error: 'Gagal mengambil data konselor' });
+  }
+});
+
+/**
+ * GET /api/data/journals
+ * Get journal history for the logged-in student
+ */
+router.get('/journals', requireRole('student'), async (req: RequestWithUser, res: Response) => {
+  try {
+    const rows = await getJournalsByUserId(req.user!.userId);
+    return res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('Journals error:', err);
+    return res.status(500).json({ success: false, error: 'Gagal mengambil riwayat jurnal' });
+  }
+});
+
 // ====== COUNSELOR ROUTES ======
 
 /**
@@ -173,6 +205,50 @@ router.patch('/triage/:studentId', requireRole('counselor'), async (req: Request
   } catch (err) {
     console.error('Triage update error:', err);
     return res.status(500).json({ success: false, error: 'Gagal memperbarui status triase' });
+  }
+});
+
+/**
+ * GET /api/data/triage
+ * Get triage queue for counselor
+ */
+router.get('/triage', requireRole('counselor'), async (req: RequestWithUser, res: Response) => {
+  try {
+    const rows = await getStudentsForTriage();
+    return res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('Triage fetch error:', err);
+    return res.status(500).json({ success: false, error: 'Gagal mengambil antrean triase' });
+  }
+});
+
+/**
+ * GET /api/data/student/:studentId/journals
+ * Get a specific student's journal history (counselor only)
+ */
+router.get('/student/:studentId/journals', requireRole('counselor'), async (req: RequestWithUser, res: Response) => {
+  try {
+    const { studentId } = req.params;
+    const rows = await getJournalsByUserId(studentId);
+    return res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('Student journals fetch error:', err);
+    return res.status(500).json({ success: false, error: 'Gagal mengambil jurnal mahasiswa' });
+  }
+});
+
+/**
+ * GET /api/data/student/:studentId/soap
+ * Get SOAP note for a specific student written by the logged-in counselor
+ */
+router.get('/student/:studentId/soap', requireRole('counselor'), async (req: RequestWithUser, res: Response) => {
+  try {
+    const { studentId } = req.params;
+    const content = await getSoapNote(studentId, req.user!.userId);
+    return res.json({ success: true, data: { content } });
+  } catch (err) {
+    console.error('SOAP fetch error:', err);
+    return res.status(500).json({ success: false, error: 'Gagal mengambil catatan SOAP' });
   }
 });
 

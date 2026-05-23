@@ -67,45 +67,61 @@ router.get('/me', authMiddleware, async (req: RequestWithUser, res: Response) =>
 });
 
 /**
- * GET /api/auth/demo-accounts
- * Returns list of demo accounts for the login page (no passwords)
+ * POST /api/auth/register
+ * Body: { username, password, name, role, detail, faculty, nim }
+ * Returns: { success, token, user }
  */
-router.get('/demo-accounts', (_req: Request, res: Response) => {
-  return res.json({
-    success: true,
-    accounts: [
-      {
-        username: 'rizky',
-        password: 'student123',
-        name: 'Rizky Aditya Pratama',
-        role: 'student',
-        detail: 'NIM: 215150400111 | Smt 5',
-        faculty: 'Teknik Informatika',
-        emoji: '🎓',
-        color: '#2E75B6',
-      },
-      {
-        username: 'dr.sari',
-        password: 'konselor123',
-        name: 'Dr. Sari Kusumawati',
-        role: 'counselor',
-        detail: 'Subdirektorat Konseling UB',
-        faculty: 'Konselor',
-        emoji: '👨‍⚕️',
-        color: '#0F6E56',
-      },
-      {
-        username: 'prof.hendra',
-        password: 'prof123',
-        name: 'Prof. Dr. Hendra Wijaya',
-        role: 'prof',
-        detail: 'Direktur Kemahasiswaan UB',
-        faculty: 'Pimpinan',
-        emoji: '📊',
-        color: '#BA7517',
+router.post('/register', async (req: Request, res: Response) => {
+  try {
+    const { username, password, name, role, detail, faculty, nim } = req.body;
+    
+    if (!username || !password || !name || !role) {
+      return res.status(400).json({ success: false, error: 'Username, password, nama, dan role wajib diisi' });
+    }
+    
+    // Check if username exists
+    const existingUser = await getUserByUsername(username.trim().toLowerCase());
+    if (existingUser) {
+      return res.status(400).json({ success: false, error: 'Username sudah digunakan' });
+    }
+    
+    const { getPool } = await import('../db.js');
+    const { nanoid } = await import('nanoid');
+    const hash = await bcrypt.hash(password, 10);
+    const userId = nanoid();
+    
+    const pool = getPool();
+    await pool.query(
+      'INSERT INTO users (id, username, password_hash, name, role, detail, faculty, nim) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [userId, username.trim().toLowerCase(), hash, name, role, detail || null, faculty || null, nim || null]
+    );
+    
+    const user = await getUserById(userId);
+    
+    const token = signToken({
+      userId: user.id,
+      username: user.username,
+      role: user.role,
+      name: user.name,
+    });
+    
+    return res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        role: user.role,
+        detail: user.detail,
+        faculty: user.faculty,
+        nim: user.nim,
       }
-    ]
-  });
+    });
+  } catch (err) {
+    console.error('Register error:', err);
+    return res.status(500).json({ success: false, error: 'Terjadi kesalahan server' });
+  }
 });
 
 export default router;

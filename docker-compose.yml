@@ -1,15 +1,15 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: mindbridge_mysql
+    container_name: cope_mysql
     restart: unless-stopped
     networks:
-      - mindbridge_net
+      - cope_net
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mindbridge
-      MYSQL_USER: mindbridge
-      MYSQL_PASSWORD: mindbridge123
+      MYSQL_DATABASE: cope
+      MYSQL_USER: cope_user
+      MYSQL_PASSWORD: cope_password
     ports:
       - '3306:3306'
     volumes:
@@ -23,9 +23,9 @@ services:
 
   app:
     build: .
-    container_name: mindbridge_app
+    container_name: cope_app
     networks:
-      - mindbridge_net
+      - cope_net
     ports:
       - '3001:3001'
     environment:
@@ -33,9 +33,9 @@ services:
       - PORT=3001
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USER=mindbridge
-      - DB_PASSWORD=mindbridge123
-      - DB_NAME=mindbridge
+      - DB_USER=cope_user
+      - DB_PASSWORD=cope_password
+      - DB_NAME=cope
     env_file:
       - .env.local
     depends_on:
@@ -44,7 +44,7 @@ services:
     restart: unless-stopped
 
 networks:
-  mindbridge_net:
+  cope_net:
     driver: bridge
 
 volumes:

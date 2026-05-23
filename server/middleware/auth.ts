@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'mindbridge-ub-secret-2024';
+const JWT_SECRET = process.env.JWT_SECRET || 'cope-secret-2024';
 
 export interface JwtPayload {
   userId: string;

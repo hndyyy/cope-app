@@ -3,9 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MindBridge UB — Mental Health Platform</title>
-  <meta name="description" content="Platform Kesehatan Mental Mahasiswa Universitas Brawijaya">
+  <title>COPE — Mental Health Platform</title>
+  <meta name="description" content="COPE Mental Health Platform">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -203,28 +208,39 @@
     <div class="flex items-center gap-3 mb-2">
       <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">🧠</div>
       <div>
-        <h1>MindBridge <span style="color:#7dd3fc">UB</span></h1>
+        <h1 id="form-title">COPE</h1>
       </div>
     </div>
-    <p class="mb-8">Platform Kesehatan Mental Mahasiswa Universitas Brawijaya</p>
-
-    <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:rgba(255,255,255,0.5)">Pilih akun demo</p>
-    <div id="demo-cards" class="space-y-3 mb-2">
-      <!-- Injected from /api/auth/demo-accounts -->
-      <div class="demo-card animate-pulse" style="height:64px;"></div>
-      <div class="demo-card animate-pulse" style="height:64px;"></div>
-      <div class="demo-card animate-pulse" style="height:64px;"></div>
-    </div>
+    <p class="mb-8" id="form-subtitle">Mental Health Platform</p>
 
     <div class="login-divider">
-      <hr><span>atau masuk manual</span><hr>
+      <hr><span id="divider-text">Silakan masuk ke akun Anda</span><hr>
     </div>
 
+
+
     <div id="login-error"></div>
-    <form id="login-form" class="space-y-3" onsubmit="handleLogin(event)">
+    
+    <!-- LOGIN FORM -->
+    <form id="login-form" class="space-y-3 transition-opacity duration-300" style="opacity: 1;" onsubmit="handleLogin(event)">
       <input id="inp-username" type="text" placeholder="Username" class="login-input" autocomplete="username">
       <input id="inp-password" type="password" placeholder="Password" class="login-input" autocomplete="current-password">
       <button id="login-btn" type="submit" class="login-btn">Masuk</button>
+      <p class="text-xs text-center mt-2" style="color:rgba(255,255,255,0.7)">Belum punya akun? <a href="#" onclick="toggleForm(event)" style="color:#7dd3fc; text-decoration:underline">Daftar sekarang</a></p>
+    </form>
+    
+    <!-- REGISTER FORM -->
+    <form id="register-form" class="space-y-3 hidden transition-opacity duration-300" style="opacity: 0;" onsubmit="handleRegister(event)">
+      <input id="reg-username" type="text" placeholder="Username" class="login-input">
+      <input id="reg-password" type="password" placeholder="Password" class="login-input">
+      <input id="reg-name" type="text" placeholder="Nama Lengkap" class="login-input">
+      <select id="reg-role" class="login-input" style="color:#fff">
+        <option value="student" style="color:#000">Mahasiswa</option>
+        <option value="counselor" style="color:#000">Konselor</option>
+        <option value="prof" style="color:#000">Prof / Admin</option>
+      </select>
+      <button id="register-btn" type="submit" class="login-btn">Daftar</button>
+      <p class="text-xs text-center mt-2" style="color:rgba(255,255,255,0.7)">Sudah punya akun? <a href="#" onclick="toggleForm(event)" style="color:#7dd3fc; text-decoration:underline">Masuk</a></p>
     </form>
   </div>
 </div>
@@ -235,7 +251,7 @@
   <!-- SIDEBAR -->
   <aside class="sidebar flex flex-col text-white">
     <div class="p-6 mb-2">
-      <h1 class="text-2xl font-bold tracking-tight">MindBridge <span class="text-blue-300">UB</span></h1>
+      <h1 class="text-2xl font-bold tracking-tight">COPE</h1>
       <p class="text-[10px] opacity-70 uppercase tracking-widest mt-1">Mental Health Platform</p>
     </div>
     <nav class="flex-1 space-y-1" id="sidebar-nav">
@@ -312,51 +328,27 @@
           <!-- Right Column -->
           <div class="col-span-3 flex flex-col space-y-6">
             <div class="card p-5">
-              <h3 class="text-sm font-bold mb-4">Self-Help Resources</h3>
+              <h3 class="text-sm font-bold mb-4 text-gray-900 dark:text-white">Self-Help Resources</h3>
               <div class="space-y-4">
-                <div class="flex items-center space-x-4 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div class="breath-circle" id="breath-text">Tarik napas<br>...</div>
-                  <div>
-                    <p class="text-xs font-bold">Teknik Pernapasan 4-7-8</p>
-                    <p class="text-[10px] opacity-60 mt-1">Ikuti animasi di kiri</p>
-                  </div>
-                </div>
                 <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p class="text-xs font-bold mb-2">Jurnal Refleksi Harian</p>
-                  <textarea id="journal-input" class="w-full text-xs p-2 rounded border border-gray-200 bg-white" placeholder="Apa yang kamu rasakan hari ini?" rows="3"></textarea>
+                  <p class="text-xs font-bold mb-2 text-gray-900 dark:text-white">Jurnal Refleksi Harian</p>
+                  <textarea id="journal-input" class="w-full text-xs p-2 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" placeholder="Apa yang kamu rasakan hari ini?" rows="3"></textarea>
                   <button onclick="saveJournal()" class="mt-2 text-[10px] bg-blue-600 text-white px-3 py-1 rounded">Simpan</button>
-                </div>
-                <div class="p-3 border rounded-lg border-dashed text-center cursor-pointer hover:bg-gray-50 transition">
-                  <p class="text-xs font-bold">Latihan Grounding 5-4-3-2-1</p>
-                  <p class="text-[10px] opacity-60 mt-1">Mulai Latihan</p>
+                  
+                  <div class="mt-4 pt-3 border-t border-blue-100 dark:border-blue-900/40">
+                    <p class="text-[10px] font-bold opacity-60 uppercase mb-2">Riwayat Jurnal</p>
+                    <div id="journal-history-list" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                      <p class="text-xs opacity-50 text-center py-2">Memuat jurnal...</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div class="card p-5 border-dark flex-1">
               <h3 class="text-sm font-bold mb-4">Book Counseling</h3>
-              <div class="space-y-3">
-                <div class="p-2 border rounded hover:border-[#2E75B6] transition flex justify-between items-center">
-                  <div>
-                    <p class="text-xs font-bold">Dr. Sari Kusumawati</p>
-                    <p class="text-[10px] text-green-600 font-medium">Buka: Besok, 14:00</p>
-                  </div>
-                  <button onclick="bookCounseling('Dr. Sari Kusumawati','Besok, 14:00')" class="px-3 py-1.5 bg-[#2E75B6] text-white text-[10px] rounded hover:bg-[#1B3A6B] transition">Pilih</button>
-                </div>
-                <div class="p-2 border rounded hover:border-[#2E75B6] transition flex justify-between items-center">
-                  <div>
-                    <p class="text-xs font-bold">Ahmad Dahlan, M.Psi</p>
-                    <p class="text-[10px] text-green-600 font-medium">Buka: Rabu, 09:30</p>
-                  </div>
-                  <button onclick="bookCounseling('Ahmad Dahlan, M.Psi','Rabu, 09:30')" class="px-3 py-1.5 bg-[#2E75B6] text-white text-[10px] rounded hover:bg-[#1B3A6B] transition">Pilih</button>
-                </div>
-                <div class="p-2 border rounded flex justify-between items-center opacity-50">
-                  <div>
-                    <p class="text-xs font-bold">Dina Ramadhani</p>
-                    <p class="text-[10px]">Jadwal Penuh</p>
-                  </div>
-                  <button class="px-3 py-1.5 bg-gray-200 text-gray-400 text-[10px] rounded cursor-not-allowed">Penuh</button>
-                </div>
+              <div id="counselor-list" class="space-y-3">
+                <p class="text-xs opacity-50 text-center py-2">Memuat daftar konselor...</p>
               </div>
             </div>
           </div>
@@ -558,31 +550,39 @@
   </div>
   <div class="flex-1 overflow-y-auto p-6 space-y-6">
     <div class="flex items-center space-x-4">
-      <div class="w-16 h-16 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-xl font-bold">AF</div>
+      <div id="drawer-initials" class="w-16 h-16 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-xl font-bold">--</div>
       <div>
-        <h3 class="text-xl font-bold">Ahmad Farid Hidayat</h3>
-        <p class="text-sm opacity-60">Teknik Informatika | Semester 7</p>
-        <span class="inline-block mt-2 px-2 py-1 bg-red-600 text-white text-[10px] rounded font-bold uppercase tracking-wider">Prioritas Krisis</span>
+        <h3 id="drawer-name" class="text-xl font-bold">Nama Mahasiswa</h3>
+        <p id="drawer-faculty" class="text-sm opacity-60">Fakultas</p>
+        <span id="drawer-badge" class="inline-block mt-2 px-2 py-1 bg-gray-500 text-white text-[10px] rounded font-bold uppercase tracking-wider">Status</span>
       </div>
     </div>
     <div class="grid grid-cols-2 gap-4">
-      <div class="p-4 border rounded-xl bg-white dark:bg-gray-800"><p class="text-xs font-bold opacity-60">Skor Risiko (Sistem)</p><p class="text-2xl font-bold text-red-600 mt-1">87<span class="text-sm text-gray-500">/100</span></p></div>
-      <div class="p-4 border rounded-xl bg-white dark:bg-gray-800"><p class="text-xs font-bold opacity-60">Konteks Akademik</p><p class="text-sm font-semibold mt-1 pb-1 border-b">IPK: <span class="text-red-500">2.4</span></p><p class="text-sm font-semibold mt-1">Hadir: <span class="text-red-500">61%</span></p></div>
+      <div class="p-4 border rounded-xl bg-white dark:bg-gray-800"><p class="text-xs font-bold opacity-60">Skor Risiko Terakhir</p><p class="text-2xl font-bold text-red-600 mt-1"><span id="drawer-score">0</span><span class="text-sm text-gray-500">/27</span></p></div>
+      <div class="p-4 border rounded-xl bg-white dark:bg-gray-800"><p class="text-xs font-bold opacity-60">Konteks Tambahan</p><p class="text-sm font-semibold mt-1 pb-1 border-b">Triase: <span id="drawer-triage-text" class="text-gray-500">Menunggu</span></p></div>
     </div>
+    
+    <div>
+      <h4 class="text-sm font-bold mb-3 border-b pb-2">Riwayat Jurnal Refleksi</h4>
+      <div id="drawer-journals" class="space-y-2 max-h-48 overflow-y-auto">
+        <p class="text-xs opacity-50">Memuat jurnal...</p>
+      </div>
+    </div>
+
     <div><h4 class="text-sm font-bold mb-3">Tren 8 Minggu (PHQ-9)</h4><div class="h-40 w-full"><canvas id="drawerTrendChart"></canvas></div></div>
-    <div><h4 class="text-sm font-bold mb-3">Breakdown Item PHQ-9 (Skor 22)</h4><div class="h-48 w-full"><canvas id="drawerBarChart"></canvas></div></div>
+    
     <div>
       <h4 class="text-sm font-bold mb-2">Label Status Penanganan</h4>
-      <select id="triage-status-select" class="w-full p-2 border rounded font-medium text-sm" onchange="saveTriage(this.value,'user-student-1')">
-        <option>Baru / Menunggu Triase</option>
-        <option selected>Dalam Penanganan</option>
-        <option>Selesai / Observasi</option>
+      <select id="triage-status-select" class="w-full p-2 border border-gray-200 dark:border-gray-700 rounded font-medium text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+        <option value="Baru / Menunggu Triase">Baru / Menunggu Triase</option>
+        <option value="Dalam Penanganan">Dalam Penanganan</option>
+        <option value="Selesai / Observasi">Selesai / Observasi</option>
       </select>
     </div>
     <div>
       <h4 class="text-sm font-bold mb-2">SOAP Notes</h4>
-      <textarea id="soap-textarea" rows="4" class="w-full border rounded p-3 text-sm focus:outline-none focus:border-[#2E75B6]" placeholder="Tulis catatan klinis di sini...">Indikasi kuat kelelahan akademik kronis dan ideasi pasif. Membutuhkan intervensi segera terkait semester akhir.</textarea>
-      <button onclick="saveSoapNotes('user-student-1')" class="mt-2 text-xs text-blue-600 font-semibold">Simpan Catatan</button>
+      <textarea id="soap-textarea" rows="4" class="w-full border border-gray-200 dark:border-gray-700 rounded p-3 text-sm focus:outline-none focus:border-[#2E75B6] bg-white dark:bg-gray-800 text-gray-900 dark:text-white" placeholder="Tulis catatan klinis di sini..."></textarea>
+      <button id="btn-save-soap" class="mt-2 text-xs text-blue-600 font-semibold hover:underline">Simpan Catatan</button>
     </div>
   </div>
   <div class="p-6 border-t shrink-0 bg-white dark:bg-[#1E1E1E]">
@@ -610,16 +610,7 @@ const phq9Questions = [
   "Pikiran bahwa Anda lebih baik mati atau ingin menyakiti diri sendiri"
 ];
 
-const students = [
-  { id:'user-student-1', nama:"Ahmad Farid Hidayat", fak:"FILKOM", score:87, rank:"Krisis", instrument:"PHQ-9", val:22 },
-  { id:'user-student-2', nama:"Dewi Rahayu Santoso",  fak:"FEB",    score:81, rank:"Krisis", instrument:"PHQ-9", val:19 },
-  { id:'mock-3',         nama:"Budi Santoso",          fak:"FH",     score:68, rank:"Tinggi", instrument:"GAD-7", val:16 },
-  { id:'mock-4',         nama:"Siti Nurhaliza",         fak:"FK",     score:61, rank:"Tinggi", instrument:"PHQ-9", val:14 },
-  { id:'mock-5',         nama:"Eko Prasetyo",           fak:"FIA",    score:55, rank:"Sedang", instrument:"SRQ-20",val:9  },
-  { id:'mock-6',         nama:"Rina Marlina",           fak:"FILKOM", score:48, rank:"Sedang", instrument:"GAD-7", val:11 },
-  { id:'mock-7',         nama:"Dimas Arifin",           fak:"FEB",    score:42, rank:"Sedang", instrument:"PHQ-9", val:9  },
-  { id:'mock-8',         nama:"Laila Fitriani",         fak:"FH",     score:31, rank:"Rendah", instrument:"SRQ-20",val:6  }
-];
+let triageStudents = [];
 
 // ==================== AUTH ====================
 async function api(path, options = {}) {
@@ -629,32 +620,84 @@ async function api(path, options = {}) {
   return res.json();
 }
 
-async function loadDemoCards() {
-  try {
-    const data = await api('/api/auth/demo-accounts');
-    if (!data.success) return;
-    const roleColors = { student:'#2E75B6', counselor:'#0F6E56', prof:'#BA7517' };
-    const roleLabels = { student:'Mahasiswa', counselor:'Konselor', prof:'Prof / Admin' };
-    const container = document.getElementById('demo-cards');
-    container.innerHTML = data.accounts.map(acc => `
-      <div class="demo-card" onclick="quickLogin('${acc.username}','${acc.password}')">
-        <div class="emoji">${acc.emoji}</div>
-        <div class="flex-1 min-w-0">
-          <div class="info-name">${acc.name}</div>
-          <div class="info-detail">${acc.detail}</div>
-        </div>
-        <span class="role-chip" style="background:${roleColors[acc.role]}22;color:${roleColors[acc.role]};border:1px solid ${roleColors[acc.role]}44">${roleLabels[acc.role]}</span>
-      </div>
-    `).join('');
-  } catch(e) {
-    console.error('Failed to load demo accounts:', e);
+function toggleForm(e) {
+  e.preventDefault();
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const errorDiv = document.getElementById('login-error');
+  const title = document.getElementById('form-title');
+  const subtitle = document.getElementById('form-subtitle');
+  const divider = document.getElementById('divider-text');
+  
+  errorDiv.classList.remove('show');
+  
+  if (loginForm.classList.contains('hidden')) {
+    // Switch to Login
+    registerForm.style.opacity = 0;
+    setTimeout(() => {
+      registerForm.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      title.innerText = 'COPE';
+      subtitle.innerText = 'Mental Health Platform';
+      divider.innerText = 'Silakan masuk ke akun Anda';
+      setTimeout(() => loginForm.style.opacity = 1, 50);
+    }, 300);
+  } else {
+    // Switch to Register
+    loginForm.style.opacity = 0;
+    setTimeout(() => {
+      loginForm.classList.add('hidden');
+      registerForm.classList.remove('hidden');
+      title.innerText = 'Daftar Akun';
+      subtitle.innerText = 'Bergabunglah dengan COPE';
+      divider.innerText = 'Lengkapi data diri Anda';
+      setTimeout(() => registerForm.style.opacity = 1, 50);
+    }, 300);
   }
 }
 
-async function quickLogin(username, password) {
-  document.getElementById('inp-username').value = username;
-  document.getElementById('inp-password').value = password;
-  await doLogin(username, password);
+async function handleRegister(e) {
+  e.preventDefault();
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const name = document.getElementById('reg-name').value.trim();
+  const role = document.getElementById('reg-role').value;
+  
+  const btn = document.getElementById('register-btn');
+  const err = document.getElementById('login-error');
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
+  err.classList.remove('show');
+
+  try {
+    const data = await api('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, password, name, role })
+    });
+    if (!data.success) {
+      err.textContent = data.error || 'Pendaftaran gagal';
+      err.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Daftar';
+      return;
+    }
+    authToken = data.token;
+    currentUser = data.user;
+    localStorage.setItem('mb_token', authToken);
+    localStorage.setItem('mb_user', JSON.stringify(currentUser));
+    
+    // Clear form
+    document.getElementById('reg-username').value = '';
+    document.getElementById('reg-password').value = '';
+    document.getElementById('reg-name').value = '';
+    
+    enterApp();
+  } catch(e) {
+    err.textContent = 'Tidak dapat terhubung ke server. Pastikan server berjalan.';
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Daftar';
+  }
 }
 
 async function handleLogin(e) {
@@ -711,6 +754,15 @@ function logout() {
   document.getElementById('inp-username').value = '';
   document.getElementById('inp-password').value = '';
   document.getElementById('login-error').classList.remove('show');
+  
+  // Close drawer if open
+  closeDrawer();
+  
+  // Reset buttons
+  const loginBtn = document.getElementById('login-btn');
+  if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Masuk'; }
+  const regBtn = document.getElementById('register-btn');
+  if (regBtn) { regBtn.disabled = false; regBtn.textContent = 'Daftar'; }
 }
 
 async function tryAutoLogin() {
@@ -751,9 +803,11 @@ function enterApp() {
   setupSliders();
   initTheme();
 
-  // Load history if student
+  // Load data based on role
   if (currentUser.role === 'student') {
     loadHistory();
+    loadJournals();
+    loadCounselors();
   }
 
   // Default view per role
@@ -824,6 +878,7 @@ function switchView(viewId) {
   if (section) section.classList.add('active');
 
   if (viewId === 'view-history') loadHistory();
+  if (viewId === 'view-counselor') buildTriageTable();
 }
 
 function updateIdentity() {
@@ -855,7 +910,63 @@ function closeModal(id) {
   m.querySelector('.modal-content').classList.add('scale-95');
   setTimeout(() => m.classList.remove('open'), 200);
 }
-function openDrawer() { document.getElementById('profile-drawer').classList.add('open'); }
+async function openDrawer(index = 0) { 
+  const drawer = document.getElementById('profile-drawer');
+  drawer.classList.add('open'); 
+  
+  const student = triageStudents[index];
+  if (!student) return;
+  
+  const initials = (student.nama || 'A').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const rankClass = student.rank==='Krisis'?'bg-red-600':student.rank==='Tinggi'?'bg-yellow-500':student.rank==='Sedang'?'bg-orange-500':'bg-green-600';
+  
+  // Fill basic info
+  document.getElementById('drawer-initials').innerText = initials;
+  document.getElementById('drawer-name').innerText = student.nama;
+  document.getElementById('drawer-faculty').innerText = student.fak;
+  document.getElementById('drawer-badge').className = `inline-block mt-2 px-2 py-1 text-white text-[10px] rounded font-bold uppercase tracking-wider ${rankClass}`;
+  document.getElementById('drawer-badge').innerText = student.rank==='Krisis'?'Prioritas Krisis':'Terskrining';
+  document.getElementById('drawer-score').innerText = student.score || 0;
+  
+  // Set triage dropdown and context
+  document.getElementById('drawer-triage-text').innerText = student.triage_status || 'Baru / Menunggu Triase';
+  const selectTriage = document.getElementById('triage-status-select');
+  selectTriage.value = student.triage_status || 'Baru / Menunggu Triase';
+  selectTriage.onchange = (e) => saveTriage(e.target.value, student.id);
+  
+  // Set SOAP notes button and fetch existing
+  const soapTextArea = document.getElementById('soap-textarea');
+  soapTextArea.value = 'Memuat catatan...';
+  document.getElementById('btn-save-soap').onclick = () => saveSoapNotes(student.id);
+  
+  try {
+    const soapRes = await api(`/api/data/student/${student.id}/soap`);
+    if (soapRes.success) {
+      soapTextArea.value = soapRes.data.content || '';
+    } else {
+      soapTextArea.value = '';
+    }
+  } catch(e) {
+    soapTextArea.value = '';
+  }
+
+  // Fetch Journals
+  const journalContainer = document.getElementById('drawer-journals');
+  journalContainer.innerHTML = '<p class="text-xs opacity-50">Memuat jurnal...</p>';
+  try {
+    const res = await api(`/api/data/student/${student.id}/journals`);
+    if (res.success && res.data.length > 0) {
+      journalContainer.innerHTML = res.data.map(j => {
+        const date = new Date(j.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+        return `<div class="p-2 border-b dark:border-gray-700 last:border-0"><p class="text-xs">${j.content}</p><p class="text-[9px] opacity-60 mt-1">${date}</p></div>`;
+      }).join('');
+    } else {
+      journalContainer.innerHTML = '<p class="text-xs opacity-50">Belum ada entri jurnal.</p>';
+    }
+  } catch (e) {
+    journalContainer.innerHTML = '<p class="text-xs text-red-500">Gagal memuat jurnal</p>';
+  }
+}
 function closeDrawer() { document.getElementById('profile-drawer').classList.remove('open'); }
 
 function exportCSV() {
@@ -922,11 +1033,76 @@ async function saveJournal() {
     if (res.success) {
       showToast("Jurnal tersimpan!");
       document.getElementById('journal-input').value = '';
+      loadJournals();
     } else {
       showToast(res.error || 'Gagal menyimpan', 'error');
     }
   } catch(e) {
     showToast('Gagal terhubung ke server', 'error');
+  }
+}
+
+async function loadJournals() {
+  const container = document.getElementById('journal-history-list');
+  if (!container || currentUser?.role !== 'student') return;
+  container.innerHTML = '<p class="text-xs opacity-50 text-center py-2">Memuat jurnal...</p>';
+  try {
+    const res = await api('/api/data/journals');
+    if (!res.success || !res.data.length) {
+      container.innerHTML = '<p class="text-xs opacity-50 text-center py-2">Belum ada jurnal.</p>';
+      return;
+    }
+    container.innerHTML = res.data.map(j => {
+      const date = new Date(j.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+      return `
+        <div class="p-2 bg-gray-50 dark:bg-gray-800/50 rounded text-xs border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition">
+          <p class="font-medium text-gray-800 dark:text-gray-200 mb-1">${j.content}</p>
+          <p class="text-[9px] opacity-60 text-right">${date}</p>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<p class="text-xs text-red-500 text-center py-2">Gagal memuat jurnal</p>';
+  }
+}
+
+async function loadCounselors() {
+  const container = document.getElementById('counselor-list');
+  if (!container || currentUser?.role !== 'student') return;
+  try {
+    const res = await api('/api/data/counselors');
+    if (!res.success || !res.data.length) {
+      container.innerHTML = '<p class="text-xs opacity-50 text-center py-2">Belum ada konselor tersedia.</p>';
+      return;
+    }
+    container.innerHTML = res.data.map((c, i) => {
+      // Dummy availability for visual effect
+      const isOpen = i % 3 !== 2; 
+      const time = i % 2 === 0 ? 'Besok, 14:00' : 'Rabu, 09:30';
+      if (isOpen) {
+        return `
+          <div class="p-2 border dark:border-gray-700 rounded hover:border-[#2E75B6] transition flex justify-between items-center">
+            <div>
+              <p class="text-xs font-bold">${c.name}</p>
+              <p class="text-[10px] text-green-600 font-medium">Buka: ${time}</p>
+            </div>
+            <button onclick="bookCounseling('${c.name}','${time}')" class="px-3 py-1.5 bg-[#2E75B6] text-white text-[10px] rounded hover:bg-[#1B3A6B] transition">Pilih</button>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="p-2 border dark:border-gray-700 rounded flex justify-between items-center opacity-50">
+            <div>
+              <p class="text-xs font-bold">${c.name}</p>
+              <p class="text-[10px]">Jadwal Penuh</p>
+            </div>
+            <button disabled class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-400 text-[10px] rounded cursor-not-allowed">Penuh</button>
+          </div>
+        `;
+      }
+    }).join('');
+  } catch(e) {
+    container.innerHTML = '<p class="text-xs text-red-500 text-center py-2">Gagal memuat konselor</p>';
   }
 }
 
@@ -1068,7 +1244,7 @@ function viewHistoryDetail(date, score, answersJson) {
   try { answers = JSON.parse(answersJson); } catch(e) {}
   let content = `
     <div class="mb-4"><p class="text-xs font-bold opacity-60 uppercase mb-1">Instrumen</p><p class="font-bold">PHQ-9 (Patient Health Questionnaire)</p><p class="text-[10px] opacity-70">Diselesaikan pada ${date}</p></div>
-    <div class="mb-4"><p class="text-xs font-bold opacity-60 uppercase mb-1">Skor Total</p><p class="text-xl font-bold ${score>=10?'text-[#A32D2D]':'text-[#0F6E56']}">${score}</p></div>
+    <div class="mb-4"><p class="text-xs font-bold opacity-60 uppercase mb-1">Skor Total</p><p class="text-xl font-bold ${score>=10 ? 'text-[#A32D2D]' : 'text-[#0F6E56]'}">${score}</p></div>
     <div class="space-y-2 border-t pt-2">
   `;
   const labels = ["Tidak sama sekali","Beberapa hari","Lebih dari setengah hari","Hampir setiap hari"];
@@ -1105,20 +1281,80 @@ async function saveTriage(status, studentId) {
   }
 }
 
-function buildTriageTable() {
+async function buildTriageTable() {
   const tb = document.getElementById('triage-table-body');
   if (!tb) return;
-  tb.innerHTML = students.map((s, i) => {
-    const badgeClass = s.rank==='Krisis'?'badge-krisis':s.rank==='Tinggi'?'badge-tinggi':s.rank==='Sedang'?'badge-sedang':'badge-rendah';
-    return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-      <td class="px-6 py-3 font-semibold">${s.nama}</td>
-      <td class="px-6 py-3 text-xs opacity-80">${s.fak}</td>
-      <td class="px-6 py-3"><span class="risk-badge ${badgeClass}">${s.rank} (${s.score})</span></td>
-      <td class="px-6 py-3 text-xs">${s.instrument}: ${s.val}</td>
-      <td class="px-6 py-3 text-[10px] opacity-60">${i===0?'5 mnt lalu':i*15+' mnt lalu'}</td>
-      <td class="px-6 py-3"><button onclick="openDrawer(${i})" class="text-xs bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded font-semibold hover:bg-blue-100 hover:text-blue-700 transition">Lihat Profil</button></td>
-    </tr>`;
-  }).join('');
+  tb.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center opacity-50">Memuat data mahasiswa...</td></tr>';
+  try {
+    const res = await api('/api/data/triage');
+    if (res.success) {
+      triageStudents = res.data;
+      tb.innerHTML = triageStudents.map((s, i) => {
+        const badgeClass = s.rank==='Krisis'?'badge-krisis':s.rank==='Tinggi'?'badge-tinggi':s.rank==='Sedang'?'badge-sedang':'badge-rendah';
+        const dateStr = s.phq_date ? new Date(s.phq_date).toLocaleDateString('id-ID', { day:'numeric', month:'short' }) : '-';
+        return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <td class="px-6 py-3 font-semibold">${s.nama}</td>
+          <td class="px-6 py-3 text-xs opacity-80">${s.fak || '-'}</td>
+          <td class="px-6 py-3"><span class="risk-badge ${badgeClass}">${s.rank} (${s.score || 0})</span></td>
+          <td class="px-6 py-3 text-xs">${s.rank_text || 'Belum Skrining'}</td>
+          <td class="px-6 py-3 text-[10px] opacity-60">${dateStr}</td>
+          <td class="px-6 py-3"><button onclick="openDrawer(${i})" class="text-xs bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded font-semibold hover:bg-blue-100 hover:text-blue-700 transition">Lihat Profil</button></td>
+        </tr>`;
+      }).join('');
+    }
+  } catch(e) {
+    tb.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-red-500">Gagal memuat data triase</td></tr>';
+  }
+}
+
+// ==================== COUNSELOR ACTIONS ====================
+async function saveTriage(status, studentId) {
+  try {
+    const res = await api(`/api/data/triage/${studentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+    if (res.success) {
+      showToast('Status triase diperbarui!');
+      // Update local array so it reflects without hard refresh
+      const s = triageStudents.find(x => x.id === studentId);
+      if (s) {
+        s.triage_status = status;
+        document.getElementById('drawer-triage-text').innerText = status;
+      }
+    } else {
+      showToast(res.error || 'Gagal memperbarui', 'error');
+    }
+  } catch (e) {
+    showToast('Gagal terhubung ke server', 'error');
+  }
+}
+
+async function saveSoapNotes(studentId) {
+  const content = document.getElementById('soap-textarea').value.trim();
+  if (!content) return showToast('Catatan SOAP tidak boleh kosong', 'error');
+  
+  const btn = document.getElementById('btn-save-soap');
+  const ogText = btn.innerText;
+  btn.innerText = 'Menyimpan...';
+  btn.disabled = true;
+
+  try {
+    const res = await api('/api/data/soap', {
+      method: 'POST',
+      body: JSON.stringify({ studentId, content })
+    });
+    if (res.success) {
+      showToast('Catatan SOAP disimpan!');
+    } else {
+      showToast(res.error || 'Gagal menyimpan', 'error');
+    }
+  } catch (e) {
+    showToast('Gagal terhubung ke server', 'error');
+  } finally {
+    btn.innerText = ogText;
+    btn.disabled = false;
+  }
 }
 
 // ==================== CHARTS ====================
@@ -1210,11 +1446,9 @@ function initCharts() {
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', async () => {
-  // Load demo cards
-  loadDemoCards();
-
   // Bind form submit
   document.getElementById('login-form').addEventListener('submit', handleLogin);
+  document.getElementById('register-form').addEventListener('submit', handleRegister);
 
   // Escape closes modals
   document.addEventListener('keydown', e => {

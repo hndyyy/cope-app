@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindBridge UB — Mental Health Platform</title>
+  <meta name="description" content="Platform Kesehatan Mental Mahasiswa Universitas Brawijaya">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #1B3A6B;
+      --primary-mid: #2E75B6;
+      --primary-light: #D0E4F5;
+      --accent-teal: #0F6E56;
+      --accent-amber: #BA7517;
+      --accent-red: #A32D2D;
+      --bg-color: #F5F5F3;
+      --text-main: #3D3D3A;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      height: 100vh;
+      width: 100vw;
+    }
+    body.dark {
+      --bg-color: #121212;
+      --text-main: #E0E0E0;
+    }
+    body.dark .card, body.dark .modal-content, body.dark .drawer { background: #1E1E1E; color: #E0E0E0; border-color: #333; }
+    body.dark input, body.dark textarea, body.dark select { background: #2D2D2D; color: #FFF; border-color: #444; }
+    body.dark header { background: #1E1E1E; border-color: #333; }
+    body.dark td, body.dark th { border-color: #333; }
+
+    /* ===== APP WRAPPER ===== */
+    #app-wrapper {
+      display: none;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+    #app-wrapper.visible { display: flex; }
+
+    /* ===== LOGIN OVERLAY ===== */
+    #login-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(135deg, #0d1f40 0%, #1B3A6B 40%, #0F6E56 100%);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    #login-overlay.hidden-out {
+      opacity: 0; pointer-events: none; transform: scale(1.04);
+    }
+    .login-glass {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      padding: 48px 44px;
+      width: 480px;
+      max-width: 95vw;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    }
+    .login-glass h1 { color: #fff; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+    .login-glass p  { color: rgba(255,255,255,0.6); font-size: 13px; }
+
+    .demo-card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px; padding: 14px 16px;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .demo-card:hover {
+      background: rgba(255,255,255,0.16);
+      border-color: rgba(255,255,255,0.3);
+      transform: translateY(-2px);
+    }
+    .demo-card .emoji { font-size: 26px; }
+    .demo-card .info-name { color: #fff; font-weight: 600; font-size: 14px; }
+    .demo-card .info-detail { color: rgba(255,255,255,0.55); font-size: 11px; }
+    .demo-card .role-chip {
+      margin-left: auto; padding: 3px 10px; border-radius: 99px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+    }
+
+    .login-divider { display: flex; align-items: center; gap: 10px; margin: 18px 0; }
+    .login-divider span { color: rgba(255,255,255,0.3); font-size: 12px; white-space: nowrap; }
+    .login-divider hr { flex: 1; border: none; border-top: 1px solid rgba(255,255,255,0.12); }
+
+    .login-input {
+      width: 100%; padding: 11px 14px; border-radius: 10px;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; font-size: 14px; outline: none;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .login-input::placeholder { color: rgba(255,255,255,0.4); }
+    .login-input:focus { border-color: rgba(255,255,255,0.5); }
+
+    .login-btn {
+      width: 100%; padding: 13px; border-radius: 10px;
+      background: linear-gradient(135deg, #2E75B6, #0F6E56);
+      color: #fff; font-weight: 700; font-size: 15px;
+      border: none; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+    }
+    .login-btn:hover { opacity: 0.9; }
+    .login-btn:active { transform: scale(0.98); }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #login-error {
+      background: rgba(163,45,45,0.3); border: 1px solid rgba(163,45,45,0.5);
+      color: #ffaaaa; border-radius: 8px; padding: 8px 12px; font-size: 12px;
+      display: none; margin-bottom: 12px;
+    }
+    #login-error.show { display: block; }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar { width: 240px; background: var(--primary-dark); height: 100vh; flex-shrink: 0; }
+    .nav-item { transition: all 0.2s; border-left: 4px solid transparent; }
+    .nav-item.active { background: rgba(255,255,255,0.1); border-left-color: var(--accent-teal); }
+
+    /* ===== CARD ===== */
+    .card { background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border-left: 4px solid var(--primary-mid); }
+    .card.border-teal  { border-left-color: var(--accent-teal); }
+    .card.border-amber { border-left-color: var(--accent-amber); }
+    .card.border-dark  { border-left-color: var(--primary-dark); }
+    .card.border-red   { border-left-color: var(--accent-red); }
+
+    .risk-badge { padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .badge-krisis { background: var(--accent-red); color: white; }
+    .badge-tinggi { background: #EAB308; color: white; }
+    .badge-sedang { background: var(--accent-amber); color: white; }
+    .badge-rendah { background: var(--accent-teal); color: white; }
+
+    .breath-circle {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--primary-light); border: 2px solid var(--primary-mid);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: bold; text-align: center; padding: 4px;
+      color: var(--primary-dark); animation: breathe 19s infinite linear;
+    }
+    @keyframes breathe {
+      0%   { transform: scale(1); }
+      21%  { transform: scale(1.3); }
+      57%  { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    .sos-btn { background: var(--accent-red); animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0 rgba(163,45,45,0.6); }
+      70%  { box-shadow: 0 0 0 15px rgba(163,45,45,0); }
+      100% { box-shadow: 0 0 0 0 rgba(163,45,45,0); }
+    }
+
+    .view-section { display: none; height: 100%; overflow-y: auto; padding-bottom: 2rem; }
+    .view-section.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+    .drawer {
+      position: fixed; right: -450px; top: 0; width: 450px; height: 100vh;
+      background: white; box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+      transition: right 0.3s ease-in-out; z-index: 50; overflow-y: auto;
+    }
+    .drawer.open { right: 0; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; justify-content: center; align-items: center; z-index: 100;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { display: flex; opacity: 1; }
+
+    .toast {
+      position: fixed; bottom: -100px; right: 20px;
+      background: var(--accent-teal); color: white;
+      padding: 12px 24px; border-radius: 8px; transition: bottom 0.3s;
+      z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .toast.show { bottom: 20px; }
+
+    .heatmap-cell {
+      aspect-ratio: 1; border-radius: 4px; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 12px; font-weight: bold;
+      color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+
+    /* Loading spinner */
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ===== LOGIN OVERLAY ===== -->
+<div id="login-overlay">
+  <div class="login-glass">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">🧠</div>
+      <div>
+        <h1>MindBridge <span style="color:#7dd3fc">UB</span></h1>
+      </div>
+    </div>
+    <p class="mb-8">Platform Kesehatan Mental Mahasiswa Universitas Brawijaya</p>
+
+    <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:rgba(255,255,255,0.5)">Pilih akun demo</p>
+    <div id="demo-cards" class="space-y-3 mb-2">
+      <!-- Injected from /api/auth/demo-accounts -->
+      <div class="demo-card animate-pulse" style="height:64px;"></div>
+      <div class="demo-card animate-pulse" style="height:64px;"></div>
+      <div class="demo-card animate-pulse" style="height:64px;"></div>
+    </div>
+
+    <div class="login-divider">
+      <hr><span>atau masuk manual</span><hr>
+    </div>
+
+    <div id="login-error"></div>
+    <form id="login-form" class="space-y-3" onsubmit="handleLogin(event)">
+      <input id="inp-username" type="text" placeholder="Username" class="login-input" autocomplete="username">
+      <input id="inp-password" type="password" placeholder="Password" class="login-input" autocomplete="current-password">
+      <button id="login-btn" type="submit" class="login-btn">Masuk</button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== APP (hidden until logged in) ===== -->
+<div id="app-wrapper" class="flex h-full w-full">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar flex flex-col text-white">
+    <div class="p-6 mb-2">
+      <h1 class="text-2xl font-bold tracking-tight">MindBridge <span class="text-blue-300">UB</span></h1>
+      <p class="text-[10px] opacity-70 uppercase tracking-widest mt-1">Mental Health Platform</p>
+    </div>
+    <nav class="flex-1 space-y-1" id="sidebar-nav">
+      <!-- Injected per role -->
+    </nav>
+    <div class="p-4 border-t border-white/10" id="user-profile-widget"></div>
+    <div class="px-4 pb-5">
+      <button onclick="logout()" class="w-full py-2 text-sm text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition flex items-center justify-center gap-2">
+        <span>🚪</span> Keluar
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 flex flex-col h-full bg-[#F5F5F3] dark:bg-[#121212] transition-colors relative overflow-hidden">
+    <header class="h-16 border-b bg-white flex items-center justify-between px-8 shrink-0 z-10 transition-colors">
+      <div class="flex items-center space-x-4" id="header-greeting"></div>
+      <div class="flex items-center space-x-6">
+        <span class="text-sm font-medium opacity-60" id="header-faculty"></span>
+        <button id="dark-mode-toggle" class="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 transition">🌙</button>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-hidden relative">
+
+      <!-- VIEW 1: STUDENT PORTAL -->
+      <div id="view-student" class="view-section p-8">
+        <div class="grid grid-cols-12 gap-6 pb-20">
+
+          <!-- Left Column -->
+          <div class="col-span-4 flex flex-col space-y-6">
+            <div class="card p-5 border-amber">
+              <h3 class="text-sm font-bold mb-4 flex items-center"><span class="mr-2">🌤️</span> Weekly Mood Check-in</h3>
+              <div class="space-y-4">
+                <div>
+                  <div class="flex justify-between text-xs font-medium mb-1"><span>Suasana Hati</span><span id="val-mood">Baik</span></div>
+                  <input type="range" id="slider-mood" class="w-full accent-[#BA7517]" min="1" max="100" value="70">
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs font-medium mb-1"><span>Tingkat Stres</span><span id="val-stress">Sedang</span></div>
+                  <input type="range" id="slider-stress" class="w-full accent-[#BA7517]" min="1" max="100" value="50">
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs font-medium mb-1"><span>Kualitas Tidur</span><span id="val-sleep">Cukup</span></div>
+                  <input type="range" id="slider-sleep" class="w-full accent-[#BA7517]" min="1" max="100" value="60">
+                </div>
+                <button onclick="saveMoodCheckin()" class="w-full py-2 bg-[#1B3A6B] text-white text-sm rounded font-semibold mt-2 hover:bg-[#2E75B6] transition">Kirim Check-in</button>
+              </div>
+            </div>
+
+            <div class="card p-5 border-teal flex-1">
+              <h3 class="text-sm font-bold mb-4 flex items-center"><span class="mr-2">📈</span> My Mental Health Trend</h3>
+              <div class="h-40 w-full relative"><canvas id="studentTrendChart"></canvas></div>
+            </div>
+
+            <button onclick="openModal('sos-modal')" class="sos-btn w-full py-4 rounded-xl text-white font-bold flex items-center justify-center space-x-3 text-lg transition hover:scale-105">
+              <span>🆘</span> <span>Butuh Bantuan Segera</span>
+            </button>
+          </div>
+
+          <!-- Middle Column -->
+          <div class="col-span-5 flex flex-col space-y-6">
+            <div class="card p-6 flex-1">
+              <h3 class="text-base font-bold mb-1 flex items-center"><span class="mr-2">📝</span> Active Screening: PHQ-9</h3>
+              <p class="text-xs opacity-60 mb-6">Seberapa sering Anda terganggu oleh masalah berikut dalam 2 minggu terakhir?</p>
+              <div id="phq9-form" class="space-y-4"></div>
+              <div id="q9-warning" class="hidden mt-3 p-3 bg-red-50 text-red-700 text-xs rounded border border-red-200 font-medium">
+                Kami peduli dengan keselamatanmu. Pertimbangkan untuk menghubungi konselor segera.
+              </div>
+              <button onclick="submitPhq9()" class="w-full mt-6 py-2.5 bg-[#0F6E56] text-white text-sm rounded font-semibold hover:bg-opacity-90 transition">Selesaikan Skrining</button>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div class="col-span-3 flex flex-col space-y-6">
+            <div class="card p-5">
+              <h3 class="text-sm font-bold mb-4">Self-Help Resources</h3>
+              <div class="space-y-4">
+                <div class="flex items-center space-x-4 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div class="breath-circle" id="breath-text">Tarik napas<br>...</div>
+                  <div>
+                    <p class="text-xs font-bold">Teknik Pernapasan 4-7-8</p>
+                    <p class="text-[10px] opacity-60 mt-1">Ikuti animasi di kiri</p>
+                  </div>
+                </div>
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <p class="text-xs font-bold mb-2">Jurnal Refleksi Harian</p>
+                  <textarea id="journal-input" class="w-full text-xs p-2 rounded border border-gray-200 bg-white" placeholder="Apa yang kamu rasakan hari ini?" rows="3"></textarea>
+                  <button onclick="saveJournal()" class="mt-2 text-[10px] bg-blue-600 text-white px-3 py-1 rounded">Simpan</button>
+                </div>
+                <div class="p-3 border rounded-lg border-dashed text-center cursor-pointer hover:bg-gray-50 transition">
+                  <p class="text-xs font-bold">Latihan Grounding 5-4-3-2-1</p>
+                  <p class="text-[10px] opacity-60 mt-1">Mulai Latihan</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card p-5 border-dark flex-1">
+              <h3 class="text-sm font-bold mb-4">Book Counseling</h3>
+              <div class="space-y-3">
+                <div class="p-2 border rounded hover:border-[#2E75B6] transition flex justify-between items-center">
+                  <div>
+                    <p class="text-xs font-bold">Dr. Sari Kusumawati</p>
+                    <p class="text-[10px] text-green-600 font-medium">Buka: Besok, 14:00</p>
+                  </div>
+                  <button onclick="bookCounseling('Dr. Sari Kusumawati','Besok, 14:00')" class="px-3 py-1.5 bg-[#2E75B6] text-white text-[10px] rounded hover:bg-[#1B3A6B] transition">Pilih</button>
+                </div>
+                <div class="p-2 border rounded hover:border-[#2E75B6] transition flex justify-between items-center">
+                  <div>
+                    <p class="text-xs font-bold">Ahmad Dahlan, M.Psi</p>
+                    <p class="text-[10px] text-green-600 font-medium">Buka: Rabu, 09:30</p>
+                  </div>
+                  <button onclick="bookCounseling('Ahmad Dahlan, M.Psi','Rabu, 09:30')" class="px-3 py-1.5 bg-[#2E75B6] text-white text-[10px] rounded hover:bg-[#1B3A6B] transition">Pilih</button>
+                </div>
+                <div class="p-2 border rounded flex justify-between items-center opacity-50">
+                  <div>
+                    <p class="text-xs font-bold">Dina Ramadhani</p>
+                    <p class="text-[10px]">Jadwal Penuh</p>
+                  </div>
+                  <button class="px-3 py-1.5 bg-gray-200 text-gray-400 text-[10px] rounded cursor-not-allowed">Penuh</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: COUNSELOR DASHBOARD -->
+      <div id="view-counselor" class="view-section p-8">
+        <div class="grid grid-cols-4 gap-4 mb-8">
+          <div class="card p-4 border-dark"><p class="text-xs opacity-60 font-semibold uppercase">Kasus Aktif</p><p class="text-3xl font-bold mt-1 text-[#1B3A6B]">23</p></div>
+          <div class="card p-4 border-amber"><p class="text-xs opacity-60 font-semibold uppercase">Menunggu Triase</p><p class="text-3xl font-bold mt-1 text-[#BA7517]">7</p></div>
+          <div class="card p-4 border-red bg-red-50 dark:bg-red-900/20"><p class="text-xs text-red-600 font-semibold uppercase">Krisis Hari Ini</p><p class="text-3xl font-bold mt-1 text-[#A32D2D]">2</p></div>
+          <div class="card p-4 border-teal"><p class="text-xs opacity-60 font-semibold uppercase">Sesi Minggu Ini</p><p class="text-3xl font-bold mt-1 text-[#0F6E56]">11</p></div>
+        </div>
+        <div class="grid grid-cols-12 gap-8">
+          <div class="col-span-8 space-y-6">
+            <div class="card flex flex-col h-full">
+              <div class="p-5 border-b flex justify-between items-center">
+                <h3 class="text-base font-bold">Triage Queue</h3>
+                <div class="text-xs flex space-x-2"><span class="px-2 py-1 bg-red-100 text-red-700 rounded font-medium">Prioritas Krisis</span></div>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                  <thead class="bg-gray-50 dark:bg-gray-800 text-xs uppercase opacity-70">
+                    <tr>
+                      <th class="px-6 py-3">Nama</th>
+                      <th class="px-6 py-3">Fakultas</th>
+                      <th class="px-6 py-3">Skor Risiko</th>
+                      <th class="px-6 py-3">Instrumen</th>
+                      <th class="px-6 py-3">Waktu</th>
+                      <th class="px-6 py-3">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="triage-table-body" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-span-4 space-y-6">
+            <div class="card p-5 border-mid h-[32rem]">
+              <h3 class="text-base font-bold mb-4">My Schedule</h3>
+              <div class="space-y-4">
+                <div class="border-l-2 border-[#A32D2D] pl-3 py-1"><p class="text-sm font-bold text-[#A32D2D]">09:00 - Sesi Darurat</p><p class="text-xs opacity-70 mt-1">Ahmad Farid Hidayat (FILKOM)</p></div>
+                <div class="border-l-2 border-[#BA7517] pl-3 py-1 bg-gray-50 dark:bg-gray-800/50 rounded-r"><p class="text-sm font-bold opacity-60 line-through">10:30 - Evaluasi Lanjutan</p><p class="text-xs text-green-600 mt-1">Selesai</p></div>
+                <div class="border-l-2 border-[#2E75B6] pl-3 py-1"><p class="text-sm font-bold text-[#2E75B6]">13:00 - Konseling Awal</p><p class="text-xs opacity-70 mt-1">Budi Santoso (FH)</p></div>
+                <div class="border-l-2 border-[#0F6E56] pl-3 py-1 outline outline-1 outline-[#0F6E56] rounded-r bg-green-50 dark:bg-green-900/10"><p class="text-sm font-bold text-[#0F6E56]">14:00 - Konseling Awal</p><p class="text-xs opacity-70 mt-1" id="counselor-new-booking">Rizky Aditya (Menunggu Konfirmasi)</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 3: ADMIN / PROF ANALYTICS -->
+      <div id="view-admin" class="view-section p-8">
+        <div class="grid grid-cols-4 gap-4 mb-6">
+          <div class="card p-4 border-dark"><p class="text-[11px] opacity-60 font-semibold uppercase tracking-wider">Terskrining</p><p class="text-2xl font-bold mt-1">3.847 <span class="text-xs font-normal text-green-500">+12%</span></p></div>
+          <div class="card p-4 border-mid"><p class="text-[11px] opacity-60 font-semibold uppercase tracking-wider">Tingkat Respons</p><p class="text-2xl font-bold mt-1">68%</p></div>
+          <div class="card p-4 border-teal"><p class="text-[11px] opacity-60 font-semibold uppercase tracking-wider">Deteksi Proaktif</p><p class="text-2xl font-bold mt-1">34% <span class="text-xs font-normal text-blue-500">Meningkat</span></p></div>
+          <div class="card p-4 border-amber"><p class="text-[11px] opacity-60 font-semibold uppercase tracking-wider">Avg Respons Krisis</p><p class="text-2xl font-bold mt-1">4.2 jam</p></div>
+        </div>
+        <div class="grid grid-cols-12 gap-6 mb-6">
+          <div class="col-span-6 card p-5 flex flex-col">
+            <h3 class="text-sm font-bold mb-4">Populasi Risiko (Heatmap)</h3>
+            <div class="grid grid-cols-5 gap-2 flex-1">
+              <div class="text-center text-xs font-bold opacity-50 mb-1">FILKOM</div>
+              <div class="text-center text-xs font-bold opacity-50 mb-1">FEB</div>
+              <div class="text-center text-xs font-bold opacity-50 mb-1">FH</div>
+              <div class="text-center text-xs font-bold opacity-50 mb-1">FK</div>
+              <div class="text-center text-xs font-bold opacity-50 mb-1">FIA</div>
+              <div class="heatmap-cell bg-yellow-500">S1</div><div class="heatmap-cell bg-green-500">S1</div><div class="heatmap-cell bg-green-500">S1</div><div class="heatmap-cell bg-orange-500">S1</div><div class="heatmap-cell bg-green-500">S1</div>
+              <div class="heatmap-cell bg-orange-500">S2</div><div class="heatmap-cell bg-yellow-500">S2</div><div class="heatmap-cell bg-green-500">S2</div><div class="heatmap-cell bg-red-600">S2</div><div class="heatmap-cell bg-yellow-500">S2</div>
+              <div class="heatmap-cell bg-red-600">S3</div><div class="heatmap-cell bg-orange-500">S3</div><div class="heatmap-cell bg-yellow-500">S3</div><div class="heatmap-cell bg-orange-500">S3</div><div class="heatmap-cell bg-green-500">S3</div>
+              <div class="heatmap-cell bg-orange-500">S4+</div><div class="heatmap-cell bg-orange-500">S4+</div><div class="heatmap-cell bg-yellow-500">S4+</div><div class="heatmap-cell bg-red-600">S4+</div><div class="heatmap-cell bg-yellow-500">S4+</div>
+            </div>
+            <div class="flex justify-center mt-3 text-[10px] space-x-4 opacity-70">
+              <span class="flex items-center"><div class="w-3 h-3 bg-green-500 mr-1 rounded-sm"></div>Normal</span>
+              <span class="flex items-center"><div class="w-3 h-3 bg-yellow-500 mr-1 rounded-sm"></div>Ringan</span>
+              <span class="flex items-center"><div class="w-3 h-3 bg-orange-500 mr-1 rounded-sm"></div>Sedang</span>
+              <span class="flex items-center"><div class="w-3 h-3 bg-red-600 mr-1 rounded-sm"></div>Tinggi/Krisis</span>
+            </div>
+          </div>
+          <div class="col-span-6 card p-5">
+            <h3 class="text-sm font-bold mb-4">Tren Skor PHQ-9 Bulanan</h3>
+            <div class="h-64 w-full"><canvas id="adminTrendChart"></canvas></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-12 gap-6 pb-12">
+          <div class="col-span-5 card p-5">
+            <h3 class="text-sm font-bold mb-4">Kapasitas vs Volume Kasus</h3>
+            <div class="h-64 w-full"><canvas id="capacityChart"></canvas></div>
+          </div>
+          <div class="col-span-7 card flex flex-col">
+            <div class="p-5 border-b flex justify-between items-center">
+              <h3 class="text-sm font-bold">Rincian Fakultas</h3>
+              <button onclick="exportCSV()" class="text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 rounded font-medium transition flex items-center"><span class="mr-2">⬇️</span> Ekspor CSV</button>
+            </div>
+            <table class="w-full text-left text-sm whitespace-nowrap">
+              <thead class="bg-gray-50 dark:bg-gray-800 text-[10px] uppercase opacity-70">
+                <tr><th class="px-5 py-3">Fakultas</th><th class="px-5 py-3">Aktif</th><th class="px-5 py-3">Terskrining</th><th class="px-5 py-3">% Risiko Tinggi</th><th class="px-5 py-3">Konselor</th><th class="px-5 py-3">Status</th></tr>
+              </thead>
+              <tbody class="divide-y text-xs">
+                <tr><td class="px-5 py-3 font-semibold">FILKOM</td><td class="px-5 py-3">2.410</td><td class="px-5 py-3 text-green-600">840</td><td class="px-5 py-3 text-red-600 font-bold">18%</td><td class="px-5 py-3">2</td><td class="px-5 py-3"><span class="px-2 py-0.5 bg-red-100 text-red-700 rounded">Overload</span></td></tr>
+                <tr><td class="px-5 py-3 font-semibold">FEB</td><td class="px-5 py-3">3.100</td><td class="px-5 py-3 text-green-600">920</td><td class="px-5 py-3">12%</td><td class="px-5 py-3">3</td><td class="px-5 py-3"><span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded">Waspada</span></td></tr>
+                <tr><td class="px-5 py-3 font-semibold">FH</td><td class="px-5 py-3">1.850</td><td class="px-5 py-3">410</td><td class="px-5 py-3">8%</td><td class="px-5 py-3">1</td><td class="px-5 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded">Aman</span></td></tr>
+                <tr><td class="px-5 py-3 font-semibold">FK</td><td class="px-5 py-3">1.200</td><td class="px-5 py-3 text-green-600">890</td><td class="px-5 py-3 text-red-600 font-bold">22%</td><td class="px-5 py-3">4</td><td class="px-5 py-3"><span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded">Terkendali</span></td></tr>
+                <tr><td class="px-5 py-3 font-semibold">FIA</td><td class="px-5 py-3">2.100</td><td class="px-5 py-3">787</td><td class="px-5 py-3">10%</td><td class="px-5 py-3">2</td><td class="px-5 py-3"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded">Aman</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 4: SCREENING HISTORY -->
+      <div id="view-history" class="view-section p-8">
+        <div class="card p-6 border-amber mb-6 bg-gradient-to-r from-red-50 to-white dark:from-red-900/10 dark:to-transparent">
+          <h2 class="text-lg font-bold text-[#A32D2D] mb-1">Perhatian Khusus</h2>
+          <p class="text-sm text-gray-700 dark:text-gray-300">Skor kamu naik <strong>6 poin</strong> dalam 4 minggu terakhir — sistem merekomendasikan penjadwalan sesi konseling.</p>
+        </div>
+        <div class="card overflow-hidden">
+          <div class="p-5 border-b"><h3 class="text-base font-bold">Riwayat Skrining (3 Bulan Terakhir)</h3></div>
+          <table class="w-full text-left text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-800 text-xs uppercase opacity-70">
+              <tr>
+                <th class="px-6 py-3">Tanggal</th>
+                <th class="px-6 py-3">Instrumen</th>
+                <th class="px-6 py-3">Skor</th>
+                <th class="px-6 py-3">Level Risiko</th>
+                <th class="px-6 py-3">Tindak Lanjut</th>
+                <th class="px-6 py-3">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y" id="history-table-body">
+              <tr><td colspan="6" class="px-6 py-8 text-center opacity-50">Memuat riwayat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- SOS Modal -->
+<div id="sos-modal" class="modal-overlay">
+  <div class="card w-[400px] p-0 overflow-hidden transform scale-95 transition-transform duration-200 modal-content border-red">
+    <div class="bg-[#A32D2D] p-6 text-white text-center">
+      <h2 class="text-2xl font-bold mb-2">Saluran Siaga 24 Jam</h2>
+      <p class="text-sm opacity-90">Kami siap mendengarkan. Anda tidak sendirian.</p>
+    </div>
+    <div class="p-6 space-y-4">
+      <a href="tel:119" class="block w-full p-4 border border-gray-200 rounded-xl hover:bg-red-50 hover:border-red-200 transition text-center">
+        <p class="text-xs font-bold text-gray-500 uppercase">Hotline Nasional</p>
+        <p class="text-xl font-bold text-[#A32D2D] mt-1">119 ext 8</p>
+      </a>
+      <a href="#" class="block w-full p-4 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition text-center" onclick="closeModal('sos-modal');showToast('Menghubungkan ke Konselor On-Call...')">
+        <p class="text-xs font-bold text-gray-500 uppercase">Konselor UB On-Call</p>
+        <p class="text-xl font-bold text-[#1B3A6B] mt-1">Hubungi Sekarang</p>
+      </a>
+      <button onclick="closeModal('sos-modal')" class="w-full py-2 text-sm text-gray-500 hover:text-gray-800 transition mt-2 border border-transparent hover:border-gray-200 rounded">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Screening Result Modal -->
+<div id="result-modal" class="modal-overlay">
+  <div class="card w-[400px] p-6 text-center transform scale-95 transition-transform duration-200 modal-content">
+    <div id="result-icon" class="text-5xl mb-4">🩺</div>
+    <h2 class="text-xl font-bold mb-2">Hasil Skrining</h2>
+    <p class="text-sm opacity-70 mb-4">Terima kasih telah mengisi skrining ini.</p>
+    <div class="py-4 bg-gray-50 dark:bg-gray-800 rounded-xl mb-6">
+      <p class="text-xs font-bold uppercase tracking-wider opacity-60">Total Skor</p>
+      <p id="result-score" class="text-4xl font-bold mt-1 text-[#1B3A6B]">0</p>
+      <p id="result-category" class="text-sm font-semibold mt-1">Normal</p>
+    </div>
+    <button onclick="closeModal('result-modal')" class="w-full py-2 bg-[#0F6E56] text-white text-sm rounded font-semibold transition hover:bg-opacity-90">Tutup</button>
+  </div>
+</div>
+
+<!-- History Detail Modal -->
+<div id="history-modal" class="modal-overlay">
+  <div class="card w-[500px] p-6 transform scale-95 transition-transform duration-200 modal-content max-h-[80vh] flex flex-col">
+    <div class="flex justify-between items-center mb-4 shrink-0">
+      <h2 class="text-lg font-bold">Detail Skrining</h2>
+      <button onclick="closeModal('history-modal')" class="text-gray-500 hover:bg-gray-100 p-1 rounded">❌</button>
+    </div>
+    <div class="flex-1 overflow-y-auto pr-2 pb-4 space-y-4 text-sm" id="history-detail-content">
+      <p>Memuat data...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Counselor Profile Drawer -->
+<div id="profile-drawer" class="drawer flex flex-col">
+  <div class="p-6 border-b shrink-0 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+    <h2 class="text-lg font-bold">Profil Mahasiswa</h2>
+    <button onclick="closeDrawer()" class="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition">❌</button>
+  </div>
+  <div class="flex-1 overflow-y-auto p-6 space-y-6">
+    <div class="flex items-center space-x-4">
+      <div class="w-16 h-16 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-xl font-bold">AF</div>
+      <div>
+        <h3 class="text-xl font-bold">Ahmad Farid Hidayat</h3>
+        <p class="text-sm opacity-60">Teknik Informatika | Semester 7</p>
+        <span class="inline-block mt-2 px-2 py-1 bg-red-600 text-white text-[10px] rounded font-bold uppercase tracking-wider">Prioritas Krisis</span>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="p-4 border rounded-xl bg-white dark:bg-gray-800"><p class="text-xs font-bold opacity-60">Skor Risiko (Sistem)</p><p class="text-2xl font-bold text-red-600 mt-1">87<span class="text-sm text-gray-500">/100</span></p></div>
+      <div class="p-4 border rounded-xl bg-white dark:bg-gray-800"><p class="text-xs font-bold opacity-60">Konteks Akademik</p><p class="text-sm font-semibold mt-1 pb-1 border-b">IPK: <span class="text-red-500">2.4</span></p><p class="text-sm font-semibold mt-1">Hadir: <span class="text-red-500">61%</span></p></div>
+    </div>
+    <div><h4 class="text-sm font-bold mb-3">Tren 8 Minggu (PHQ-9)</h4><div class="h-40 w-full"><canvas id="drawerTrendChart"></canvas></div></div>
+    <div><h4 class="text-sm font-bold mb-3">Breakdown Item PHQ-9 (Skor 22)</h4><div class="h-48 w-full"><canvas id="drawerBarChart"></canvas></div></div>
+    <div>
+      <h4 class="text-sm font-bold mb-2">Label Status Penanganan</h4>
+      <select id="triage-status-select" class="w-full p-2 border rounded font-medium text-sm" onchange="saveTriage(this.value,'user-student-1')">
+        <option>Baru / Menunggu Triase</option>
+        <option selected>Dalam Penanganan</option>
+        <option>Selesai / Observasi</option>
+      </select>
+    </div>
+    <div>
+      <h4 class="text-sm font-bold mb-2">SOAP Notes</h4>
+      <textarea id="soap-textarea" rows="4" class="w-full border rounded p-3 text-sm focus:outline-none focus:border-[#2E75B6]" placeholder="Tulis catatan klinis di sini...">Indikasi kuat kelelahan akademik kronis dan ideasi pasif. Membutuhkan intervensi segera terkait semester akhir.</textarea>
+      <button onclick="saveSoapNotes('user-student-1')" class="mt-2 text-xs text-blue-600 font-semibold">Simpan Catatan</button>
+    </div>
+  </div>
+  <div class="p-6 border-t shrink-0 bg-white dark:bg-[#1E1E1E]">
+    <button onclick="closeDrawer();showToast('Sesi darurat dijadwalkan, notifikasi dikirim ke mahasiswa.')" class="w-full py-3 bg-[#1B3A6B] text-white rounded font-bold shadow hover:bg-opacity-90 transition">Jadwalkan Sesi Segera</button>
+  </div>
+</div>
+
+<div id="toast" class="toast">Aksi berhasil!</div>
+
+<script>
+// ==================== STATE ====================
+const API_BASE = 'http://localhost:3001';
+let currentUser = null;
+let authToken = null;
+
+const phq9Questions = [
+  "Merasa tidak bersemangat atau tidak ada harapan",
+  "Tidak ada minat atau kesenangan dalam melakukan hal apapun",
+  "Sulit tidur, tidak bisa tidur nyenyak, atau tidur terlalu banyak",
+  "Merasa lelah atau tidak berenergi",
+  "Tidak nafsu makan atau makan berlebihan",
+  "Merasa buruk tentang diri sendiri — atau merasa bahwa Anda adalah orang yang gagal",
+  "Sulit berkonsentrasi pada sesuatu",
+  "Bergerak atau berbicara sangat lambat; atau sebaliknya, sangat gelisah",
+  "Pikiran bahwa Anda lebih baik mati atau ingin menyakiti diri sendiri"
+];
+
+const students = [
+  { id:'user-student-1', nama:"Ahmad Farid Hidayat", fak:"FILKOM", score:87, rank:"Krisis", instrument:"PHQ-9", val:22 },
+  { id:'user-student-2', nama:"Dewi Rahayu Santoso",  fak:"FEB",    score:81, rank:"Krisis", instrument:"PHQ-9", val:19 },
+  { id:'mock-3',         nama:"Budi Santoso",          fak:"FH",     score:68, rank:"Tinggi", instrument:"GAD-7", val:16 },
+  { id:'mock-4',         nama:"Siti Nurhaliza",         fak:"FK",     score:61, rank:"Tinggi", instrument:"PHQ-9", val:14 },
+  { id:'mock-5',         nama:"Eko Prasetyo",           fak:"FIA",    score:55, rank:"Sedang", instrument:"SRQ-20",val:9  },
+  { id:'mock-6',         nama:"Rina Marlina",           fak:"FILKOM", score:48, rank:"Sedang", instrument:"GAD-7", val:11 },
+  { id:'mock-7',         nama:"Dimas Arifin",           fak:"FEB",    score:42, rank:"Sedang", instrument:"PHQ-9", val:9  },
+  { id:'mock-8',         nama:"Laila Fitriani",         fak:"FH",     score:31, rank:"Rendah", instrument:"SRQ-20",val:6  }
+];
+
+// ==================== AUTH ====================
+async function api(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  const res = await fetch(API_BASE + path, { ...options, headers });
+  return res.json();
+}
+
+async function loadDemoCards() {
+  try {
+    const data = await api('/api/auth/demo-accounts');
+    if (!data.success) return;
+    const roleColors = { student:'#2E75B6', counselor:'#0F6E56', prof:'#BA7517' };
+    const roleLabels = { student:'Mahasiswa', counselor:'Konselor', prof:'Prof / Admin' };
+    const container = document.getElementById('demo-cards');
+    container.innerHTML = data.accounts.map(acc => `
+      <div class="demo-card" onclick="quickLogin('${acc.username}','${acc.password}')">
+        <div class="emoji">${acc.emoji}</div>
+        <div class="flex-1 min-w-0">
+          <div class="info-name">${acc.name}</div>
+          <div class="info-detail">${acc.detail}</div>
+        </div>
+        <span class="role-chip" style="background:${roleColors[acc.role]}22;color:${roleColors[acc.role]};border:1px solid ${roleColors[acc.role]}44">${roleLabels[acc.role]}</span>
+      </div>
+    `).join('');
+  } catch(e) {
+    console.error('Failed to load demo accounts:', e);
+  }
+}
+
+async function quickLogin(username, password) {
+  document.getElementById('inp-username').value = username;
+  document.getElementById('inp-password').value = password;
+  await doLogin(username, password);
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const username = document.getElementById('inp-username').value.trim();
+  const password = document.getElementById('inp-password').value;
+  await doLogin(username, password);
+}
+
+async function doLogin(username, password) {
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-error');
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
+  err.classList.remove('show');
+
+  try {
+    const data = await api('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password })
+    });
+    if (!data.success) {
+      err.textContent = data.error || 'Login gagal';
+      err.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Masuk';
+      return;
+    }
+    authToken = data.token;
+    currentUser = data.user;
+    localStorage.setItem('mb_token', authToken);
+    localStorage.setItem('mb_user', JSON.stringify(currentUser));
+    enterApp();
+  } catch(e) {
+    err.textContent = 'Tidak dapat terhubung ke server. Pastikan server berjalan.';
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Masuk';
+  }
+}
+
+function logout() {
+  authToken = null;
+  currentUser = null;
+  localStorage.removeItem('mb_token');
+  localStorage.removeItem('mb_user');
+  // Destroy charts
+  Object.values(window.charts || {}).forEach(c => { try { c.destroy(); } catch(e){} });
+  window.charts = {};
+  // Show login
+  document.getElementById('app-wrapper').classList.remove('visible');
+  const overlay = document.getElementById('login-overlay');
+  overlay.classList.remove('hidden-out');
+  document.getElementById('inp-username').value = '';
+  document.getElementById('inp-password').value = '';
+  document.getElementById('login-error').classList.remove('show');
+}
+
+async function tryAutoLogin() {
+  const token = localStorage.getItem('mb_token');
+  const user = localStorage.getItem('mb_user');
+  if (!token || !user) return false;
+  authToken = token;
+  try {
+    const data = await api('/api/auth/me');
+    if (data.success) {
+      currentUser = data.user;
+      localStorage.setItem('mb_user', JSON.stringify(currentUser));
+      return true;
+    }
+  } catch(e) {}
+  authToken = null;
+  localStorage.removeItem('mb_token');
+  localStorage.removeItem('mb_user');
+  return false;
+}
+
+// ==================== APP ENTRY ====================
+function enterApp() {
+  // Hide login with animation
+  const overlay = document.getElementById('login-overlay');
+  overlay.classList.add('hidden-out');
+
+  // Show app
+  const app = document.getElementById('app-wrapper');
+  app.classList.add('visible');
+
+  // Build role-based UI
+  buildSidebar();
+  updateIdentity();
+  buildPHQ9Form();
+  buildTriageTable();
+  initCharts();
+  setupSliders();
+  initTheme();
+
+  // Load history if student
+  if (currentUser.role === 'student') {
+    loadHistory();
+  }
+
+  // Default view per role
+  const defaultView = {
+    student:   'view-student',
+    counselor: 'view-counselor',
+    prof:      'view-admin',
+  }[currentUser.role];
+  switchView(defaultView);
+}
+
+// ==================== ROLE-BASED SIDEBAR ====================
+const NAV_CONFIG = {
+  student: [
+    { target: 'view-student', icon: '🎓', label: 'Student Portal' },
+    { target: 'view-history', icon: '🕒', label: 'History' },
+  ],
+  counselor: [
+    { target: 'view-counselor', icon: '👨‍⚕️', label: 'Counselor Desk' },
+  ],
+  prof: [
+    { target: 'view-admin', icon: '📊', label: 'Analytics' },
+  ],
+};
+
+function buildSidebar() {
+  const nav = document.getElementById('sidebar-nav');
+  const items = NAV_CONFIG[currentUser.role] || [];
+  nav.innerHTML = items.map((item, i) => `
+    <div class="nav-item ${i===0?'active':''} px-6 py-3 flex items-center cursor-pointer ${i===0?'':'opacity-70 hover:opacity-100'}" data-target="${item.target}">
+      <span class="mr-3 text-lg">${item.icon}</span><span>${item.label}</span>
+    </div>
+  `).join('');
+
+  // Bind click
+  nav.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const target = el.getAttribute('data-target');
+      if (target) switchView(target);
+    });
+  });
+
+  // Profile widget
+  const short = currentUser.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const roleLabel = { student:'Mahasiswa', counselor:'Konselor', prof:'Prof / Admin' }[currentUser.role];
+  document.getElementById('user-profile-widget').innerHTML = `
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center font-bold text-blue-200 border border-blue-500/30">${short}</div>
+      <div>
+        <p class="text-sm font-semibold truncate w-36">${currentUser.name}</p>
+        <p class="text-[10px] opacity-60">${roleLabel}</p>
+        <p class="text-[10px] opacity-40 truncate w-36">${currentUser.detail || ''}</p>
+      </div>
+    </div>
+  `;
+}
+
+function switchView(viewId) {
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.remove('active');
+    el.classList.add('opacity-70');
+  });
+  const activeNav = document.querySelector(`.nav-item[data-target="${viewId}"]`);
+  if (activeNav) { activeNav.classList.add('active'); activeNav.classList.remove('opacity-70'); }
+
+  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+  const section = document.getElementById(viewId);
+  if (section) section.classList.add('active');
+
+  if (viewId === 'view-history') loadHistory();
+}
+
+function updateIdentity() {
+  const firstName = currentUser.name.split(' ')[0];
+  const roleLabel = { student:'Mahasiswa', counselor:'Konselor', prof:'Prof / Admin' }[currentUser.role];
+  document.getElementById('header-greeting').innerHTML = `
+    <h2 class="text-lg font-semibold whitespace-nowrap">Selamat Pagi, ${firstName}</h2>
+    ${currentUser.role === 'student' ? `<span id="header-risk-badge" class="risk-badge badge-sedang shadow-sm transition-colors">Risiko Sedang</span>` : `<span class="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded font-semibold">${roleLabel}</span>`}
+  `;
+  document.getElementById('header-faculty').innerText = currentUser.faculty || '';
+}
+
+// ==================== UI HELPERS ====================
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.innerText = msg;
+  t.style.background = type === 'error' ? '#A32D2D' : 'var(--accent-teal)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function openModal(id) {
+  const m = document.getElementById(id);
+  m.classList.add('open');
+  setTimeout(() => m.querySelector('.modal-content').classList.remove('scale-95'), 10);
+}
+function closeModal(id) {
+  const m = document.getElementById(id);
+  m.querySelector('.modal-content').classList.add('scale-95');
+  setTimeout(() => m.classList.remove('open'), 200);
+}
+function openDrawer() { document.getElementById('profile-drawer').classList.add('open'); }
+function closeDrawer() { document.getElementById('profile-drawer').classList.remove('open'); }
+
+function exportCSV() {
+  let csv = "Fakultas,Mahasiswa Aktif,Terskrining,Persen Risiko Tinggi,Konselor Tersedia\n";
+  csv += "FILKOM,2410,840,18%,2\nFEB,3100,920,12%,3\nFH,1850,410,8%,1\nFK,1200,890,22%,4\nFIA,2100,787,10%,2";
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+  a.download = 'Laporan_Kemahasiswaan_UB.csv'; a.click();
+  showToast("CSV Berhasil Diunduh");
+}
+
+// ==================== DARK MODE ====================
+function initTheme() {
+  const isDark = localStorage.getItem('mindbridge_dark') === 'true';
+  if (isDark) document.body.classList.add('dark');
+  document.getElementById('dark-mode-toggle').onclick = () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('mindbridge_dark', document.body.classList.contains('dark'));
+    initCharts();
+  };
+}
+
+// ==================== SLIDERS ====================
+function setupSliders() {
+  ['mood','stress','sleep'].forEach(id => {
+    const el = document.getElementById(`slider-${id}`);
+    const val = document.getElementById(`val-${id}`);
+    if (!el || !val) return;
+    el.addEventListener('input', e => {
+      const v = parseInt(e.target.value);
+      if (id==='mood')   val.innerText = v<33?'Buruk':v<66?'Sedang':'Baik';
+      if (id==='stress') val.innerText = v<33?'Rendah':v<66?'Sedang':'Tinggi';
+      if (id==='sleep')  val.innerText = v<33?'Buruk':v<66?'Cukup':'Nyenyak';
+    });
+  });
+}
+
+// ==================== STUDENT ACTIONS ====================
+async function saveMoodCheckin() {
+  const mood   = parseInt(document.getElementById('slider-mood').value);
+  const stress = parseInt(document.getElementById('slider-stress').value);
+  const sleep  = parseInt(document.getElementById('slider-sleep').value);
+  const moodLabel   = document.getElementById('val-mood').innerText;
+  const stressLabel = document.getElementById('val-stress').innerText;
+  const sleepLabel  = document.getElementById('val-sleep').innerText;
+
+  try {
+    const res = await api('/api/data/mood', {
+      method: 'POST',
+      body: JSON.stringify({ mood, stress, sleep, moodLabel, stressLabel, sleepLabel })
+    });
+    if (res.success) showToast("Check-in Mingguan Berhasil Disimpan!");
+    else showToast(res.error || 'Gagal menyimpan', 'error');
+  } catch(e) {
+    showToast('Gagal terhubung ke server', 'error');
+  }
+}
+
+async function saveJournal() {
+  const text = document.getElementById('journal-input').value.trim();
+  if (!text) return;
+  try {
+    const res = await api('/api/data/journal', { method:'POST', body: JSON.stringify({ content: text }) });
+    if (res.success) {
+      showToast("Jurnal tersimpan!");
+      document.getElementById('journal-input').value = '';
+    } else {
+      showToast(res.error || 'Gagal menyimpan', 'error');
+    }
+  } catch(e) {
+    showToast('Gagal terhubung ke server', 'error');
+  }
+}
+
+async function bookCounseling(name, time) {
+  try {
+    const res = await api('/api/data/booking', {
+      method: 'POST',
+      body: JSON.stringify({ counselorName: name, scheduleTime: time })
+    });
+    if (res.success) {
+      showToast(`Berhasil menjadwalkan dengan ${name}`);
+      const el = document.getElementById('counselor-new-booking');
+      if (el) el.innerHTML = `${currentUser?.name?.split(' ')[0] || 'Anda'} <span class="text-xs text-[#0F6E56] font-bold">(Dijadwalkan: ${time})</span>`;
+    } else {
+      showToast(res.error || 'Gagal booking', 'error');
+    }
+  } catch(e) {
+    showToast('Gagal terhubung ke server', 'error');
+  }
+}
+
+// ==================== PHQ-9 ====================
+function buildPHQ9Form() {
+  const container = document.getElementById('phq9-form');
+  if (!container) return;
+  container.innerHTML = phq9Questions.map((q, i) => `
+    <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700 transition hover:border-[#2E75B6]">
+      <p class="text-xs font-semibold mb-3">${i+1}. ${q}</p>
+      <div class="grid grid-cols-4 gap-2 px-1">
+        <label class="text-[9px] text-center cursor-pointer flex flex-col items-center"><input type="radio" name="q${i}" value="0" class="mb-1" ${i<4?'checked':''} onchange="checkQ9(${i},0)"> Tdk Sama Sekali</label>
+        <label class="text-[9px] text-center cursor-pointer flex flex-col items-center"><input type="radio" name="q${i}" value="1" class="mb-1" onchange="checkQ9(${i},1)"> Beberapa Hari</label>
+        <label class="text-[9px] text-center cursor-pointer flex flex-col items-center"><input type="radio" name="q${i}" value="2" class="mb-1" onchange="checkQ9(${i},2)"> &gt; Setengah Hari</label>
+        <label class="text-[9px] text-center cursor-pointer flex flex-col items-center"><input type="radio" name="q${i}" value="3" class="mb-1" onchange="checkQ9(${i},3)"> Setiap Hari</label>
+      </div>
+    </div>
+  `).join('');
+}
+
+function checkQ9(index, val) {
+  if (index === 8) {
+    const warn = document.getElementById('q9-warning');
+    if (val > 0) { warn.classList.remove('hidden'); }
+    else { warn.classList.add('hidden'); }
+  }
+}
+
+async function submitPhq9() {
+  const answers = [];
+  for (let i = 0; i < 9; i++) {
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    answers.push(sel ? parseInt(sel.value) : 0);
+  }
+  const score = answers.reduce((a,b) => a+b, 0);
+  const riskFlag = document.getElementById('q9-warning') && !document.getElementById('q9-warning').classList.contains('hidden');
+
+  let cat = 'Normal', color = '#0F6E56';
+  if (score >= 20) { cat = 'Depresi Berat'; color = '#A32D2D'; }
+  else if (score >= 15) { cat = 'Depresi Moderat Berat'; color = '#A32D2D'; }
+  else if (score >= 10) { cat = 'Depresi Moderat'; color = '#BA7517'; }
+  else if (score >= 5)  { cat = 'Depresi Ringan'; color = '#EAB308'; }
+  if (riskFlag) { cat += ' + Risiko Keselamatan'; color = '#A32D2D'; }
+
+  // Save to server
+  try {
+    await api('/api/data/phq9', {
+      method: 'POST',
+      body: JSON.stringify({ answers, score, category: cat, riskFlag })
+    });
+  } catch(e) {
+    console.warn('Failed to save PHQ-9 to server:', e);
+  }
+
+  // Update UI
+  document.getElementById('result-score').innerText = score;
+  document.getElementById('result-score').style.color = color;
+  document.getElementById('result-category').innerText = cat;
+  updateHeaderBadge(score);
+
+  // Reload history
+  loadHistory();
+
+  openModal('result-modal');
+}
+
+function updateHeaderBadge(score) {
+  const badge = document.getElementById('header-risk-badge');
+  if (!badge) return;
+  badge.className = 'risk-badge shadow-sm transition-colors ';
+  if (score >= 15) { badge.classList.add('badge-krisis'); badge.innerText = 'Risiko Tinggi'; }
+  else if (score >= 10) { badge.classList.add('badge-sedang'); badge.innerText = 'Risiko Sedang'; }
+  else { badge.classList.add('badge-rendah'); badge.innerText = 'Risiko Rendah'; }
+}
+
+// ==================== HISTORY ====================
+async function loadHistory() {
+  const tbody = document.getElementById('history-table-body');
+  if (!tbody || currentUser?.role !== 'student') return;
+  tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center opacity-50">Memuat riwayat...</td></tr>';
+  try {
+    const res = await api('/api/data/history');
+    if (!res.success || !res.data.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center opacity-50">Belum ada riwayat skrining.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = res.data.map(row => {
+      const date = new Date(row.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+      let riskHtml = '';
+      if (row.score >= 20) riskHtml = '<span class="risk-badge badge-krisis">Berat</span>';
+      else if (row.score >= 15) riskHtml = '<span class="risk-badge badge-krisis">Moderat Berat</span>';
+      else if (row.score >= 10) riskHtml = '<span class="risk-badge badge-sedang">Sedang</span>';
+      else if (row.score >= 5)  riskHtml = '<span class="risk-badge badge-rendah">Ringan</span>';
+      else riskHtml = '<span class="risk-badge badge-rendah">Normal</span>';
+      const followup = row.score >= 10 ? 'Rekomendasi Konseling' : row.score >= 5 ? 'Observasi' : 'Aman';
+      return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
+        <td class="px-6 py-4">${date}</td>
+        <td class="px-6 py-4 font-medium">PHQ-9</td>
+        <td class="px-6 py-4 font-bold" style="color:${row.score>=10?'#A32D2D':row.score>=5?'#BA7517':'#0F6E56'}">${row.score}</td>
+        <td class="px-6 py-4">${riskHtml}</td>
+        <td class="px-6 py-4 text-xs">${followup}</td>
+        <td class="px-6 py-4"><button onclick="viewHistoryDetail('${date}',${row.score},'${row.answers}')" class="text-blue-600 hover:underline">Detail</button></td>
+      </tr>`;
+    }).join('');
+
+    // Update student trend chart
+    const scores = [...res.data].reverse().map(r => r.score);
+    const labels = [...res.data].reverse().map(r => new Date(r.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short' }));
+    if (window.charts.studentTrend) {
+      window.charts.studentTrend.data.labels = labels;
+      window.charts.studentTrend.data.datasets[0].data = scores;
+      window.charts.studentTrend.update();
+    }
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-red-500">Gagal memuat data. Server tidak terhubung.</td></tr>';
+  }
+}
+
+function viewHistoryDetail(date, score, answersJson) {
+  let answers = [];
+  try { answers = JSON.parse(answersJson); } catch(e) {}
+  let content = `
+    <div class="mb-4"><p class="text-xs font-bold opacity-60 uppercase mb-1">Instrumen</p><p class="font-bold">PHQ-9 (Patient Health Questionnaire)</p><p class="text-[10px] opacity-70">Diselesaikan pada ${date}</p></div>
+    <div class="mb-4"><p class="text-xs font-bold opacity-60 uppercase mb-1">Skor Total</p><p class="text-xl font-bold ${score>=10?'text-[#A32D2D]':'text-[#0F6E56']}">${score}</p></div>
+    <div class="space-y-2 border-t pt-2">
+  `;
+  const labels = ["Tidak sama sekali","Beberapa hari","Lebih dari setengah hari","Hampir setiap hari"];
+  phq9Questions.forEach((q, i) => {
+    const ans = answers[i] ?? Math.min(3, Math.floor(Math.random() * (score / 9 * 3)));
+    const label = labels[Math.min(ans, 3)];
+    content += `<div class="p-2 bg-gray-50 dark:bg-gray-800 rounded flex justify-between items-start"><p class="text-[10px] pr-4 flex-1">${i+1}. ${q}</p><span class="text-[10px] font-bold shrink-0 ${ans>1?'text-[#BA7517]':'text-gray-500'}">${label} (${ans})</span></div>`;
+  });
+  content += '</div>';
+  document.getElementById('history-detail-content').innerHTML = content;
+  openModal('history-modal');
+}
+
+// ==================== COUNSELOR ACTIONS ====================
+async function saveSoapNotes(studentId) {
+  const content = document.getElementById('soap-textarea').value.trim();
+  if (!content) return showToast('Catatan tidak boleh kosong', 'error');
+  try {
+    const res = await api('/api/data/soap', { method:'POST', body: JSON.stringify({ studentId, content }) });
+    if (res.success) showToast('Catatan SOAP disimpan');
+    else showToast(res.error || 'Gagal menyimpan', 'error');
+  } catch(e) {
+    showToast('Gagal terhubung ke server', 'error');
+  }
+}
+
+async function saveTriage(status, studentId) {
+  try {
+    const res = await api(`/api/data/triage/${studentId}`, { method:'PATCH', body: JSON.stringify({ status }) });
+    if (res.success) showToast('Status triase diperbarui');
+    else showToast(res.error || 'Gagal update', 'error');
+  } catch(e) {
+    showToast('Gagal terhubung ke server', 'error');
+  }
+}
+
+function buildTriageTable() {
+  const tb = document.getElementById('triage-table-body');
+  if (!tb) return;
+  tb.innerHTML = students.map((s, i) => {
+    const badgeClass = s.rank==='Krisis'?'badge-krisis':s.rank==='Tinggi'?'badge-tinggi':s.rank==='Sedang'?'badge-sedang':'badge-rendah';
+    return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+      <td class="px-6 py-3 font-semibold">${s.nama}</td>
+      <td class="px-6 py-3 text-xs opacity-80">${s.fak}</td>
+      <td class="px-6 py-3"><span class="risk-badge ${badgeClass}">${s.rank} (${s.score})</span></td>
+      <td class="px-6 py-3 text-xs">${s.instrument}: ${s.val}</td>
+      <td class="px-6 py-3 text-[10px] opacity-60">${i===0?'5 mnt lalu':i*15+' mnt lalu'}</td>
+      <td class="px-6 py-3"><button onclick="openDrawer(${i})" class="text-xs bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded font-semibold hover:bg-blue-100 hover:text-blue-700 transition">Lihat Profil</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ==================== CHARTS ====================
+window.charts = {};
+
+function initCharts() {
+  const isDark = document.body.classList.contains('dark');
+  const gridColor = isDark ? '#333333' : '#E5E7EB';
+  const textColor = isDark ? '#9CA3AF' : '#6B7280';
+  const primaryMid = '#2E75B6', accentAmber = '#BA7517', accentRed = '#A32D2D', accentTeal = '#0F6E56';
+
+  const commonOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: textColor, font: { size: 10 } } },
+      y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 } } }
+    }
+  };
+
+  Object.values(window.charts).forEach(c => { try { c.destroy(); } catch(e){} });
+
+  const ctx1 = document.getElementById('studentTrendChart');
+  if (ctx1) {
+    window.charts.studentTrend = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: ['W1','W2','W3','W4','W5','W6','W7','W8'],
+        datasets: [
+          { data:[4,5,4,7,9,8,11,10], borderColor:primaryMid, backgroundColor:primaryMid, borderWidth:3, tension:0.3, pointRadius:4, pointBackgroundColor:primaryMid },
+          { data:Array(8).fill(10), borderColor:accentAmber, borderWidth:1, borderDash:[5,5], pointRadius:0, fill:false }
+        ]
+      },
+      options: { ...commonOpts, scales: { y: { min:0, max:27, grid:{color:gridColor}, ticks:{color:textColor,font:{size:10}} } } }
+    });
+  }
+
+  const ctx2 = document.getElementById('adminTrendChart');
+  if (ctx2) {
+    window.charts.adminTrend = new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: ['Jan','Feb','Mar','Apr','Mei','Jun'],
+        datasets: [
+          { label:'FILKOM', data:[7.2,8.1,9.4,11.2,14.5,13.8], borderColor:accentRed, tension:0.4 },
+          { label:'FK',     data:[8.5,9.2,10.1,12.8,15.2,14.1], borderColor:accentAmber, tension:0.4 },
+          { label:'FEB',    data:[5.1,5.5,6.2,7.8,9.1,8.5], borderColor:primaryMid, tension:0.4 },
+          { label:'FIA',    data:[4.2,4.8,5.1,6.0,7.2,6.8], borderColor:accentTeal, tension:0.4 },
+          { label:'FH',     data:[4.0,4.1,4.5,5.2,6.1,5.9], borderColor:'#6B7280', tension:0.4 }
+        ]
+      },
+      options: { ...commonOpts, plugins: { legend: { display:true, position:'bottom', labels:{color:textColor,boxWidth:10,font:{size:10}} } } }
+    });
+  }
+
+  const ctx3 = document.getElementById('capacityChart');
+  if (ctx3) {
+    window.charts.capacity = new Chart(ctx3, {
+      type: 'bar',
+      data: {
+        labels: ['FILKOM','FEB','FH','FK','FIA'],
+        datasets: [
+          { label:'Kapasitas Konselor', data:[80,120,40,160,80], backgroundColor:accentTeal },
+          { label:'Volume Kasus', data:[150,110,32,195,78], backgroundColor:accentRed }
+        ]
+      },
+      options: { ...commonOpts, indexAxis:'y', plugins:{legend:{display:true,position:'bottom',labels:{color:textColor,font:{size:10}}}} }
+    });
+  }
+
+  const ctx4 = document.getElementById('drawerTrendChart');
+  if (ctx4) {
+    window.charts.drawerTrend = new Chart(ctx4, {
+      type: 'line',
+      data: { labels:['W1','W2','W3','W4','W5','W6','W7','W8'], datasets:[{data:[12,14,13,16,18,19,23,22], borderColor:accentRed, tension:0.3, pointBackgroundColor:accentRed}] },
+      options: commonOpts
+    });
+  }
+
+  const ctx5 = document.getElementById('drawerBarChart');
+  if (ctx5) {
+    window.charts.drawerBar = new Chart(ctx5, {
+      type: 'bar',
+      data: { labels:['Q1','Q2','Q3','Q4','Q5','Q6','Q7','Q8','Q9'], datasets:[{data:[2,3,3,3,2,3,2,1,3], backgroundColor:primaryMid}] },
+      options: { ...commonOpts, scales:{ y:{max:3,ticks:{stepSize:1,color:textColor}} } }
+    });
+  }
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load demo cards
+  loadDemoCards();
+
+  // Bind form submit
+  document.getElementById('login-form').addEventListener('submit', handleLogin);
+
+  // Escape closes modals
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+      if (document.getElementById('profile-drawer').classList.contains('open')) closeDrawer();
+    }
+  });
+
+  // Try auto-login from saved token
+  const loggedIn = await tryAutoLogin();
+  if (loggedIn) {
+    enterApp();
+  }
+  // else: login overlay stays visible
+});
+</script>
+</body>
+</html>

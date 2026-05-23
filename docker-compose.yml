@@ -1,0 +1,51 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mindbridge_mysql
+    restart: unless-stopped
+    networks:
+      - mindbridge_net
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mindbridge
+      MYSQL_USER: mindbridge
+      MYSQL_PASSWORD: mindbridge123
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-prootpassword']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build: .
+    container_name: mindbridge_app
+    networks:
+      - mindbridge_net
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=mindbridge
+      - DB_PASSWORD=mindbridge123
+      - DB_NAME=mindbridge
+    env_file:
+      - .env.local
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  mindbridge_net:
+    driver: bridge
+
+volumes:
+  mysql_data:
